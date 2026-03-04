@@ -138,11 +138,11 @@ build: build-current
 # Multi-course file splitting
 split-courses:
 	@echo " ------ Splitting multi-course files... -------"
-	@$(PYTHON) scripts/split_multi_course_files.py
+	@python3 scripts/split_multi_course_files.py
 
 clean-courses:
 	@echo "🧹 Cleaning course-specific files..."
-	@$(PYTHON) scripts/split_multi_course_files.py clean
+	@python3 scripts/split_multi_course_files.py clean
 
 # Notebook and DOCX conversion
 convert: $(MARKDOWN_FILES) convert-docx
