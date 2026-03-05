@@ -38,11 +38,11 @@ show_reading_time: false
                 <br><strong>You must use an email ending in @stu.powayusd.com or @powayusd.com</strong>
             </p>
             <div id="g_id_onload"
-                 data-client_id="65827797404-ccjleg7jg4g2an8ddpmhnlca4ii2gk8q.apps.googleusercontent.com"
+                 data-client_id="714327350398-q7jtd45cknoa0ijsgsg0d0iedk7epqdo.apps.googleusercontent.com"
                  data-callback="handleGoogleSignIn"
                  data-auto_prompt="false">
             </div>
-            <div class="g_id_signin" 
+            <div class="g_id_signin"
                  data-type="standard"
                  data-size="large"
                  data-theme="filled_blue"
@@ -51,7 +51,7 @@ show_reading_time: false
                  data-logo_alignment="left"
                  style="margin-bottom: 1rem;">
             </div>
-            <button type="button" class="large secondary" onclick="showSignupForm()" 
+            <button type="button" class="large secondary" onclick="showSignupForm()"
                     style="background-color: #6b7280;">
                 ← Back to Form
             </button>
@@ -125,7 +125,7 @@ show_reading_time: false
     let signupFormData = {};
     let verifiedSchoolEmail = null;
     let validationTimeout = null;
-    const GOOGLE_CLIENT_ID = "65827797404-ccjleg7jg4g2an8ddpmhnlca4ii2gk8q.apps.googleusercontent.com";
+    const GOOGLE_CLIENT_ID = "714327350398-q7jtd45cknoa0ijsgsg0d0iedk7epqdo.apps.googleusercontent.com";
 
     // Password validation with debouncing (1.5 second delay)
     function validatePasswordsDebounced() {
