@@ -95,3 +95,7 @@ plugins:
   - jekyll-include-cache
 
   
+# Allow Google OAuth popups to postMessage back to the opener
+webrick:
+  headers:
+    Cross-Origin-Opener-Policy: same-origin-allow-popups

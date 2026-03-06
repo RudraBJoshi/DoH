@@ -24,3 +24,7 @@ header_pages:
   - navigation/blog.md
   - navigation/search.md
   - navigation/logintoolkit.md
+# Allow Google OAuth popups to postMessage back to the opener
+webrick:
+  headers:
+    Cross-Origin-Opener-Policy: same-origin-allow-popups

@@ -128,3 +128,8 @@ minima:
     - navigation/search.md
 
 gemini_api_key: AIzaSyBWEz5qHeWx5buC4I4dZ2fllaMk3z8k_-w
+
+# Allow Google OAuth popups to postMessage back to the opener
+webrick:
+  headers:
+    Cross-Origin-Opener-Policy: same-origin-allow-popups

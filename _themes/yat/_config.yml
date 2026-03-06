@@ -249,3 +249,8 @@ remote_theme: "jeffreytse/jekyll-theme-yat"
 # Add the following to activate the plugin
 plugins:
   - jekyll-remote-theme
+
+# Allow Google OAuth popups to postMessage back to the opener
+webrick:
+  headers:
+    Cross-Origin-Opener-Policy: same-origin-allow-popups

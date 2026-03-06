@@ -28,3 +28,7 @@ plugins:
   - jekyll-remote-theme
 
 sources: bootcdn
+# Allow Google OAuth popups to postMessage back to the opener
+webrick:
+  headers:
+    Cross-Origin-Opener-Policy: same-origin-allow-popups
