@@ -10,7 +10,7 @@ export async function getUserData() {
     let uid = null;
     let email = null;
     let sid = null;
-    let kasmServerNeeded = null;
+    let totpEnabled = null;
     let pfp = null;
     let school = null;
 
@@ -25,7 +25,7 @@ export async function getUserData() {
             uid = data.uid;
             email = data.email;
             sid = data.sid;
-            kasmServerNeeded = data.kasm_server_needed;
+            totpEnabled = data.totp_enabled !== undefined ? data.totp_enabled : true;
             pfp = data.pfp;
             school = data.school;
         } else {
@@ -36,5 +36,5 @@ export async function getUserData() {
     }
 
     // return all data in an array
-    return [name, uid, email, sid, kasmServerNeeded, pfp, school];
+    return [name, uid, email, sid, totpEnabled, pfp, school];
 }

@@ -125,7 +125,7 @@ function handleGoogleDispatch(response) {
             <div class="form-group">
                 <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
             </div>
-            <button class="btn-primary" id="sendOtpBtn" onclick="sendOtp()">Send Verification Code</button>
+            <button class="btn-primary" id="sendOtpBtn" onclick="sendOtp()">Sign In</button>
             <div id="loginMsg" class="status-msg"></div>
 
             <div class="divider">or</div>
@@ -285,23 +285,31 @@ function handleGoogleDispatch(response) {
         }
         const btn = document.getElementById('sendOtpBtn');
         btn.disabled = true;
-        btn.textContent = 'Sending...';
+        btn.textContent = 'Signing in...';
         try {
             const res  = await fetch(`${pythonURI}/api/otp/send`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify({ email, password })
             });
             const data = await res.json();
             if (res.ok) {
-                document.getElementById('loginStep1').style.display = 'none';
-                document.getElementById('loginStep2').classList.add('show');
-                document.getElementById('otpEmailLabel').textContent = email;
-                showMsg('otpMsg', data.message, 'info');
+                if (data.user) {
+                    // 2FA disabled — backend issued JWT directly
+                    showMsg('loginMsg', 'Signed in! Redirecting...', 'success');
+                    redirect();
+                } else {
+                    // 2FA enabled — show OTP step
+                    document.getElementById('loginStep1').style.display = 'none';
+                    document.getElementById('loginStep2').classList.add('show');
+                    document.getElementById('otpEmailLabel').textContent = email;
+                    showMsg('otpMsg', data.message, 'info');
+                }
             } else {
                 showMsg('loginMsg', data.message || 'Failed to send code.', 'error');
                 btn.disabled = false;
-                btn.textContent = 'Send Verification Code';
+                btn.textContent = 'Sign In';
             }
         } catch (e) {
             showMsg('loginMsg', 'Network error. Is the backend running?', 'error');
