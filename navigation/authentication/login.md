@@ -9,6 +9,17 @@ show_reading_time: false
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
+<!-- Global stub so GSI library always finds handleGoogleDispatch even before the module loads -->
+<script>
+function handleGoogleDispatch(response) {
+    if (typeof window._googleDispatchImpl === 'function') {
+        window._googleDispatchImpl(response);
+    } else {
+        window._pendingGoogleResponse = response;
+    }
+}
+</script>
+
 <style>
 .auth-wrapper {
     display: flex;
@@ -119,9 +130,9 @@ show_reading_time: false
 
             <div class="divider">or</div>
 
-            <div id="google-login-onload"
+            <div id="g_id_onload"
                  data-client_id="714327350398-q7jtd45cknoa0ijsgsg0d0iedk7epqdo.apps.googleusercontent.com"
-                 data-callback="handleGoogleLogin"
+                 data-callback="handleGoogleDispatch"
                  data-auto_prompt="false">
             </div>
             <div class="g_id_signin"
@@ -161,69 +172,56 @@ show_reading_time: false
         <h2>Sign Up</h2>
         <hr>
 
-        <!-- Verification step (shown after form submit) -->
-        <div id="oauth-verification" class="oauth-box">
-            <h3 style="color:#6366f1; margin-bottom:0.75rem; font-size:1.1rem;">
-                Verify Your Email
-            </h3>
-            <p style="color:#9ca3af; font-size:0.9rem; margin-bottom:1.25rem;">
-                Verify your identity to create your account.
-            </p>
-
-            <!-- Option 1: Email OTP -->
-            <div id="signupOtpStep1">
-                <button class="btn-primary" onclick="sendSignupOtp()">
-                    Send Code to <span id="signupEmailLabel" style="font-style:italic;"></span>
-                </button>
-                <div id="signupOtpMsg" class="status-msg" style="margin-top:0.5rem;"></div>
+        <!-- Step 1: Choose verification method -->
+        <div id="su1">
+            <div class="form-group">
+                <input type="email" id="suEmail" placeholder="Email address" autocomplete="email">
             </div>
-            <div id="signupOtpStep2" style="display:none; margin-top:0.75rem;">
-                <div class="form-group">
-                    <input type="text" id="signupOtpCode" class="otp-input"
-                           placeholder="000000" maxlength="6"
-                           inputmode="numeric" autocomplete="one-time-code">
-                </div>
-                <button class="btn-primary" onclick="verifySignupOtp()">Verify &amp; Create Account</button>
-                <button class="btn-secondary" onclick="resetSignupOtp()">Resend Code</button>
-                <div id="signupOtpVerifyMsg" class="status-msg" style="margin-top:0.5rem;"></div>
-            </div>
-
+            <button class="btn-primary" id="suSendBtn" onclick="suSendOtp()">Send Verification Code</button>
+            <div id="suEmailMsg" class="status-msg"></div>
             <div class="divider">or</div>
-
-            <!-- Option 2: Google -->
-            <div id="g_id_onload"
-                 data-client_id="714327350398-q7jtd45cknoa0ijsgsg0d0iedk7epqdo.apps.googleusercontent.com"
-                 data-callback="handleGoogleSignIn"
-                 data-auto_prompt="false">
-            </div>
             <div class="g_id_signin"
                  data-type="standard"
                  data-size="large"
                  data-theme="filled_blue"
-                 data-text="signin_with"
+                 data-text="signup_with"
                  data-shape="rectangular"
                  data-logo_alignment="left">
             </div>
-            <div id="oauth-status" class="oauth-status"></div>
-
-            <button class="btn-secondary" onclick="showSignupForm()" style="margin-top:0.75rem;">
-                Back to Form
-            </button>
         </div>
 
-        <!-- Signup form -->
-        <form id="signupForm" onsubmit="handleSignupSubmit(event);">
+        <!-- Step 2: OTP code (email path only) -->
+        <div id="su2" style="display:none;">
+            <p style="color:#9ca3af; font-size:0.9rem; margin-bottom:1rem;">
+                Enter the 6-digit code sent to
+                <strong id="suOtpTarget" style="color:#e2e8f0;"></strong>
+            </p>
             <div class="form-group">
-                <input type="text" id="name" placeholder="Full Name" required>
+                <input type="text" id="suOtpCode" class="otp-input"
+                       placeholder="000000" maxlength="6"
+                       inputmode="numeric" autocomplete="one-time-code">
+            </div>
+            <button class="btn-primary" onclick="suVerifyOtp()">Verify Code</button>
+            <button class="btn-secondary" onclick="suBackTo1()">Back</button>
+            <div id="suOtpMsg" class="status-msg"></div>
+        </div>
+
+        <!-- Step 3: Account details -->
+        <div id="su3" style="display:none;">
+            <p style="font-size:0.85rem; margin-bottom:1rem;">
+                Verified: <span id="suVerifiedEmail" style="color:#86efac;"></span>
+            </p>
+            <div class="form-group">
+                <input type="text" id="suName" placeholder="Full Name">
             </div>
             <div class="form-group">
-                <input type="text" id="signupUid" placeholder="User ID" required>
+                <input type="text" id="suUid" placeholder="User ID">
             </div>
             <div class="form-group">
-                <input type="text" id="signupSid" placeholder="Student ID" required>
+                <input type="text" id="suSid" placeholder="Student ID">
             </div>
             <div class="form-group">
-                <select id="signupSchool" required>
+                <select id="suSchool">
                     <option value="" disabled selected>Select Your High School</option>
                     <option value="Abraxas High School">Abraxas</option>
                     <option value="Del Norte High School">Del Norte</option>
@@ -234,28 +232,21 @@ show_reading_time: false
                     <option value="Westview High School">Westview</option>
                 </select>
             </div>
-            <div class="form-group">
-                <input type="email" id="signupEmail" placeholder="Email address" required>
-            </div>
-            <div class="form-group">
-                <input type="password" id="signupPassword" placeholder="Password (min 8 chars)" required>
-            </div>
-            <div class="form-group">
-                <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
-                <div id="password-validation-message" class="validation-message"></div>
-            </div>
-            <label style="display:flex; align-items:center; gap:0.5rem; color:#9ca3af; font-size:0.85rem; margin-bottom:1rem; cursor:pointer;">
-                <input type="checkbox" id="kasmNeeded"> Kasm Server Needed
-            </label>
-            <button type="submit" class="btn-primary">Create Account</button>
-            <div class="backend-status">
-                <div id="flaskStatus" class="status-item">
-                    <span class="status-icon">&#8987;</span>
-                    <span class="status-text">Flask</span>
+            <div id="suPasswordGroup">
+                <div class="form-group">
+                    <input type="password" id="suPassword" placeholder="Password (min 8 chars)">
+                </div>
+                <div class="form-group">
+                    <input type="password" id="suConfirmPassword" placeholder="Confirm Password">
+                    <div id="suPwMsg" class="validation-message"></div>
                 </div>
             </div>
-            <div id="overallStatus" class="overall-status hidden"></div>
-        </form>
+            <label style="display:flex; align-items:center; gap:0.5rem; color:#9ca3af; font-size:0.85rem; margin-bottom:1rem; cursor:pointer;">
+                <input type="checkbox" id="suKasm"> Kasm Server Needed
+            </label>
+            <button class="btn-primary" id="suCreateBtn" onclick="suCreate()">Create Account</button>
+            <div id="suCreateMsg" class="overall-status hidden"></div>
+        </div>
 
         <div class="signup-toggle">
             Already have an account? <a onclick="toggleSignup()">Log in</a>
@@ -270,9 +261,6 @@ show_reading_time: false
     import { pythonURI } from '{{site.baseurl}}/assets/js/api/config.js';
 
     const GOOGLE_CLIENT_ID = "714327350398-q7jtd45cknoa0ijsgsg0d0iedk7epqdo.apps.googleusercontent.com";
-    let signupFormData = {};
-    let verifiedSchoolEmail = null;
-    let validationTimeout = null;
 
     // ── Utilities ──────────────────────────────────────────────────────────────
 
@@ -355,6 +343,24 @@ show_reading_time: false
         document.getElementById('otpCode').value = '';
     };
 
+    // ── Google Dispatch ────────────────────────────────────────────────────────
+
+    function googleDispatch(response) {
+        const signupCard = document.getElementById('signupCard');
+        if (signupCard && signupCard.classList.contains('show')) {
+            handleGoogleSignIn(response);
+        } else {
+            window.handleGoogleLogin(response);
+        }
+    }
+
+    // Register the real implementation and flush any call that arrived before the module loaded
+    window._googleDispatchImpl = googleDispatch;
+    if (window._pendingGoogleResponse) {
+        googleDispatch(window._pendingGoogleResponse);
+        window._pendingGoogleResponse = null;
+    }
+
     // ── Google Login ───────────────────────────────────────────────────────────
 
     window.handleGoogleLogin = async function(response) {
@@ -370,8 +376,14 @@ show_reading_time: false
             if (res.ok) {
                 showMsg('loginMsg', 'Signed in! Redirecting...', 'success');
                 redirect();
+            } else if (res.status === 404) {
+                showMsg('loginMsg', 'No account found. Taking you to sign up...', 'info');
+                setTimeout(() => {
+                    document.getElementById('signupCard').classList.add('show');
+                    handleGoogleSignIn(response);
+                }, 800);
             } else {
-                showMsg('loginMsg', data.message || 'Google login failed. Make sure you have an account.', 'error');
+                showMsg('loginMsg', data.message || 'Google login failed.', 'error');
             }
         } catch (e) {
             showMsg('loginMsg', 'Network error.', 'error');
@@ -384,67 +396,40 @@ show_reading_time: false
         document.getElementById('signupCard').classList.toggle('show');
     };
 
-    // ── Signup ─────────────────────────────────────────────────────────────────
+    // ── Signup state ───────────────────────────────────────────────────────────
 
-    function validatePasswordsDebounced() {
-        clearTimeout(validationTimeout);
-        validationTimeout = setTimeout(() => {
-            const pw  = document.getElementById('signupPassword').value;
-            const cpw = document.getElementById('confirmPassword').value;
-            const msgEl = document.getElementById('password-validation-message');
-            const field = document.getElementById('confirmPassword');
-            field.classList.remove('password-match', 'password-mismatch');
-            msgEl.className = 'validation-message';
-            if (!cpw) { msgEl.textContent = ''; return; }
-            if (pw.length < 8) {
-                msgEl.classList.add('error');
-                msgEl.textContent = 'Password must be at least 8 characters';
-                return;
-            }
-            if (pw === cpw) {
-                field.classList.add('password-match');
-                msgEl.classList.add('success');
-                msgEl.textContent = 'Passwords match';
-            } else {
-                field.classList.add('password-mismatch');
-                msgEl.classList.add('error');
-                msgEl.textContent = 'Passwords do not match';
-            }
-        }, 800);
+    let suEmail = '';
+    let suGoogleName = '';
+    let suIsGoogle = false;
+    let suGoogleResponse = null;
+
+    function suShowStep(n) {
+        ['su1','su2','su3'].forEach((id, i) => {
+            document.getElementById(id).style.display = (i + 1 === n) ? '' : 'none';
+        });
     }
 
-    window.handleSignupSubmit = function(event) {
-        event.preventDefault();
-        const pw  = document.getElementById('signupPassword').value;
-        const cpw = document.getElementById('confirmPassword').value;
-        if (pw !== cpw)  { alert('Passwords do not match.'); return; }
-        if (pw.length < 8) { alert('Password must be at least 8 characters.'); return; }
-        signupFormData = {
-            name:              document.getElementById('name').value,
-            uid:               document.getElementById('signupUid').value,
-            sid:               document.getElementById('signupSid').value,
-            school:            document.getElementById('signupSchool').value,
-            email:             document.getElementById('signupEmail').value,
-            password:          pw,
-            kasm_server_needed: document.getElementById('kasmNeeded').checked,
-        };
-        document.getElementById('signupEmailLabel').textContent = signupFormData.email;
-        document.getElementById('signupForm').style.display = 'none';
-        document.getElementById('oauth-verification').classList.add('show');
-    };
+    function suGoToDetails(email, googleName) {
+        suEmail      = email;
+        suGoogleName = googleName || '';
+        suIsGoogle   = !!googleName;
+        document.getElementById('suVerifiedEmail').textContent = email;
+        document.getElementById('suName').value = suGoogleName;
+        document.getElementById('suPasswordGroup').style.display = suIsGoogle ? 'none' : '';
+        document.getElementById('suUid').value = '';
+        document.getElementById('suSid').value = '';
+        document.getElementById('suSchool').selectedIndex = 0;
+        document.getElementById('suCreateMsg').className = 'overall-status hidden';
+        suShowStep(3);
+    }
 
-    window.showSignupForm = function() {
-        document.getElementById('oauth-verification').classList.remove('show');
-        document.getElementById('signupForm').style.display = '';
-        document.getElementById('oauth-status').textContent = '';
-    };
+    // ── Signup: Step 1 → OTP ───────────────────────────────────────────────────
 
-    // ── Signup OTP ─────────────────────────────────────────────────────────────
-
-    window.sendSignupOtp = async function() {
-        const email = signupFormData.email;
-        if (!email) { return; }
-        showMsg('signupOtpMsg', 'Sending code...', 'info');
+    window.suSendOtp = async function() {
+        const email = document.getElementById('suEmail').value.trim();
+        if (!email) { showMsg('suEmailMsg', 'Enter your email address.', 'error'); return; }
+        const btn = document.getElementById('suSendBtn');
+        btn.disabled = true; btn.textContent = 'Sending...';
         try {
             const res  = await fetch(`${pythonURI}/api/otp/signup/send`, {
                 method: 'POST',
@@ -453,137 +438,137 @@ show_reading_time: false
             });
             const data = await res.json();
             if (res.ok) {
-                showMsg('signupOtpMsg', data.message, 'success');
-                document.getElementById('signupOtpStep1').style.display = 'none';
-                document.getElementById('signupOtpStep2').style.display = 'block';
+                document.getElementById('suOtpTarget').textContent = email;
+                suEmail = email;
+                suShowStep(2);
             } else {
-                showMsg('signupOtpMsg', data.message || 'Failed to send code.', 'error');
+                showMsg('suEmailMsg', data.message || 'Failed to send code.', 'error');
+                btn.disabled = false; btn.textContent = 'Send Verification Code';
             }
         } catch (e) {
-            showMsg('signupOtpMsg', 'Network error. Is the backend running?', 'error');
+            showMsg('suEmailMsg', 'Network error. Is the backend running?', 'error');
+            btn.disabled = false; btn.textContent = 'Send Verification Code';
         }
     };
 
-    window.verifySignupOtp = async function() {
-        const email = signupFormData.email;
-        const otp   = document.getElementById('signupOtpCode').value.trim();
-        if (!otp) { showMsg('signupOtpVerifyMsg', 'Enter the verification code.', 'error'); return; }
-        showMsg('signupOtpVerifyMsg', 'Verifying...', 'info');
+    // ── Signup: Step 2 → verify OTP ───────────────────────────────────────────
+
+    window.suVerifyOtp = async function() {
+        const otp = document.getElementById('suOtpCode').value.trim();
+        if (!otp) { showMsg('suOtpMsg', 'Enter the verification code.', 'error'); return; }
+        showMsg('suOtpMsg', 'Verifying...', 'info');
         try {
             const res  = await fetch(`${pythonURI}/api/otp/signup/verify`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, otp })
+                body: JSON.stringify({ email: suEmail, otp })
             });
             const data = await res.json();
             if (res.ok) {
-                showMsg('signupOtpVerifyMsg', 'Email verified! Creating account...', 'success');
-                document.getElementById('oauth-verification').classList.remove('show');
-                document.getElementById('signupForm').style.display = '';
-                window.signup();
+                suGoToDetails(suEmail, '');
             } else {
-                showMsg('signupOtpVerifyMsg', data.message || 'Invalid code.', 'error');
+                showMsg('suOtpMsg', data.message || 'Invalid code.', 'error');
             }
         } catch (e) {
-            showMsg('signupOtpVerifyMsg', 'Network error.', 'error');
+            showMsg('suOtpMsg', 'Network error.', 'error');
         }
     };
 
-    window.resetSignupOtp = function() {
-        document.getElementById('signupOtpStep2').style.display = 'none';
-        document.getElementById('signupOtpStep1').style.display = 'block';
-        document.getElementById('signupOtpCode').value = '';
-        document.getElementById('signupOtpMsg').className = 'status-msg';
-        document.getElementById('signupOtpMsg').textContent = '';
+    window.suBackTo1 = function() {
+        document.getElementById('suOtpCode').value = '';
+        document.getElementById('suSendBtn').disabled = false;
+        document.getElementById('suSendBtn').textContent = 'Send Verification Code';
+        suShowStep(1);
     };
 
-    window.handleGoogleSignIn = function(response) {
+    // ── Signup: Google path ────────────────────────────────────────────────────
+
+    function handleGoogleSignIn(response) {
         try {
             const b64  = response.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
             const pad  = b64 + '='.repeat((4 - b64.length % 4) % 4);
             const info = JSON.parse(atob(pad));
-            verifiedSchoolEmail = info.email;
-            document.getElementById('oauth-status').innerHTML =
-                `<span style="color:#86efac;">Verified: ${info.email}</span>`;
-            setTimeout(() => {
-                document.getElementById('oauth-verification').classList.remove('show');
-                document.getElementById('signupForm').style.display = '';
-                window.signup();
-            }, 1200);
+            suGoogleResponse = response;
+            suGoToDetails(info.email, info.name || info.given_name || '');
         } catch (e) {
-            document.getElementById('oauth-status').innerHTML =
-                '<span style="color:#fca5a5;">Error processing Google Sign-In. Try again.</span>';
+            showMsg('suEmailMsg', 'Error processing Google Sign-In. Try again.', 'error');
         }
-    };
-
-    function updateBackendStatus(backend, status) {
-        const el   = document.getElementById(`${backend}Status`);
-        const icon = el.querySelector('.status-icon');
-        const text = el.querySelector('.status-text');
-        el.classList.remove('pending', 'success', 'error');
-        const map = {
-            pending: ['⏳', 'Flask'],
-            success: ['✅', 'Flask ✓'],
-            error:   ['❌', 'Flask ✗'],
-        };
-        el.classList.add(status);
-        icon.textContent = map[status][0];
-        text.textContent = map[status][1];
     }
 
-    window.signup = function() {
-        const btn = document.querySelector('#signupForm button[type="submit"]');
-        if (btn) btn.disabled = true;
-        updateBackendStatus('flask', 'pending');
-        document.getElementById('overallStatus').classList.add('hidden');
+    // ── Signup: Step 3 → create account ───────────────────────────────────────
 
-        const data = Object.keys(signupFormData).length > 0 ? signupFormData : {
-            name:              document.getElementById('name').value,
-            uid:               document.getElementById('signupUid').value,
-            sid:               document.getElementById('signupSid').value,
-            school:            document.getElementById('signupSchool').value,
-            email:             document.getElementById('signupEmail').value,
-            password:          document.getElementById('signupPassword').value,
-            kasm_server_needed: document.getElementById('kasmNeeded').checked,
-        };
+    window.suCreate = async function() {
+        const name   = document.getElementById('suName').value.trim();
+        const uid    = document.getElementById('suUid').value.trim();
+        const sid    = document.getElementById('suSid').value.trim();
+        const school = document.getElementById('suSchool').value;
+        const kasm   = document.getElementById('suKasm').checked;
 
-        fetch(`${pythonURI}/api/user`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        })
-        .then(res => {
-            if (res.ok) { updateBackendStatus('flask', 'success'); return res.json(); }
-            return res.text().then(t => { throw new Error(t); });
-        })
-        .then(() => {
-            const el = document.getElementById('overallStatus');
-            el.className = 'overall-status success';
-            el.textContent = 'Account created! You can now log in.';
-            if (btn) btn.disabled = false;
-        })
-        .catch(err => {
-            updateBackendStatus('flask', 'error');
-            const el = document.getElementById('overallStatus');
+        if (!name || !uid || !sid || !school) {
+            const el = document.getElementById('suCreateMsg');
             el.className = 'overall-status error';
-            el.textContent = 'Account creation failed. ' + err.message;
-            if (btn) btn.disabled = false;
-        });
+            el.textContent = 'Please fill in all fields.';
+            return;
+        }
+
+        let password;
+        if (suIsGoogle) {
+            password = crypto.randomUUID();
+        } else {
+            password = document.getElementById('suPassword').value;
+            const cpw = document.getElementById('suConfirmPassword').value;
+            if (password.length < 8) {
+                const el = document.getElementById('suCreateMsg');
+                el.className = 'overall-status error';
+                el.textContent = 'Password must be at least 8 characters.';
+                return;
+            }
+            if (password !== cpw) {
+                const el = document.getElementById('suCreateMsg');
+                el.className = 'overall-status error';
+                el.textContent = 'Passwords do not match.';
+                return;
+            }
+        }
+
+        const btn = document.getElementById('suCreateBtn');
+        btn.disabled = true;
+        const msgEl = document.getElementById('suCreateMsg');
+        msgEl.className = 'overall-status info';
+        msgEl.textContent = 'Creating account...';
+
+        try {
+            const res = await fetch(`${pythonURI}/api/user`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, uid, sid, school, email: suEmail, password, kasm_server_needed: kasm })
+            });
+            if (res.ok) {
+                msgEl.className = 'overall-status success';
+                msgEl.textContent = 'Account created! Signing you in...';
+                if (suIsGoogle && suGoogleResponse) {
+                    setTimeout(() => window.handleGoogleLogin(suGoogleResponse), 800);
+                } else {
+                    setTimeout(() => {
+                        document.getElementById('signupCard').classList.remove('show');
+                        suShowStep(1);
+                    }, 2000);
+                }
+            } else {
+                const data = await res.json();
+                msgEl.className = 'overall-status error';
+                msgEl.textContent = data.message || 'Account creation failed.';
+                btn.disabled = false;
+            }
+        } catch (e) {
+            msgEl.className = 'overall-status error';
+            msgEl.textContent = 'Network error.';
+            btn.disabled = false;
+        }
     };
 
     // ── Init ───────────────────────────────────────────────────────────────────
 
     window.addEventListener('load', function() {
-        document.getElementById('signupPassword')
-            ?.addEventListener('input', validatePasswordsDebounced);
-        document.getElementById('confirmPassword')
-            ?.addEventListener('input', validatePasswordsDebounced);
-
-        if (window.google?.accounts) {
-            window.google.accounts.id.initialize({
-                client_id: GOOGLE_CLIENT_ID,
-                callback: handleGoogleLogin
-            });
-        }
     });
 </script>
