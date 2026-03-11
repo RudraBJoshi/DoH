@@ -313,7 +313,7 @@ permalink: /game-maker/
 /* Play canvas area — position:relative so overlays work */
 #gm-play-area {
   position: relative;
-  display: inline-block;
+  display: block;
   width: 100%;
 }
 #gm-play-canvas {
@@ -326,15 +326,15 @@ permalink: /game-maker/
 /* HTML overlays on top of play canvas */
 .gm-overlay {
   position: absolute;
-  inset: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0,0,0,0.72);
+  background: rgba(0,0,0,0.78);
   border-radius: 10px;
-  z-index: 10;
+  z-index: 9999;
 }
-.gm-overlay.hidden { display: none; }
+.gm-overlay.hidden { display: none !important; }
 .gm-overlay-box {
   background: #1a1a2e;
   border: 2px solid #FFD700;
@@ -1210,9 +1210,6 @@ function startPlay() {
 }
 
 function loadPlayLevel(idx) {
-  // Skip levels with no stars (auto-advance)
-  while (idx < game.levels.length && game.levels[idx].stars.length === 0) idx++;
-
   if (idx >= game.levels.length) { showFinalWin(); return true; }
 
   hideAllOverlays();
@@ -1220,10 +1217,18 @@ function loadPlayLevel(idx) {
 
   if (playRAF) cancelAnimationFrame(playRAF);
   playState = buildPlayState(game.levels[idx]);
-  if (!playState) return false;
   playState.keys       = playKeys;
   playState.levelIdx   = idx;
   playState.wonHandled = false;
+  // If this level has no stars, mark it as empty so we auto-show the next-level popup
+  if (playState.totalStars === 0) {
+    playState.isEmpty = true;
+    // After a brief moment, show the level-complete overlay so player can advance
+    setTimeout(() => {
+      const isLast = playLevelIdx + 1 >= game.levels.length;
+      isLast ? showFinalWin() : showLevelCompleteUI(playLevelIdx, true);
+    }, 600);
+  }
 
   document.getElementById('gm-play-level-info').textContent =
     `Level ${idx+1} of ${game.levels.length}${game.playerName ? ' — playing as ' + game.playerName : ''}`;
@@ -1233,9 +1238,8 @@ function loadPlayLevel(idx) {
 }
 
 function buildPlayState(lv) {
-  const lvClone   = JSON.parse(JSON.stringify(lv));
+  const lvClone    = JSON.parse(JSON.stringify(lv));
   const totalStars = lvClone.stars.length;
-  if (totalStars === 0) return null;
   return {
     player: {
       x:    lvClone.playerStart.x - 20,
@@ -1281,12 +1285,26 @@ function hideAllOverlays() {
   document.getElementById('gm-overlay-win').classList.add('hidden');
 }
 
-function showLevelCompleteUI(idx) {
-  const hasnext = (idx + 1 < game.levels.length) && game.levels.slice(idx+1).some(lv=>lv.stars.length>0);
-  document.getElementById('gm-lc-heading').textContent = `⭐ Level ${idx+1} Complete!`;
-  document.getElementById('gm-lc-sub').textContent =
-    `${game.playerName||'You'} collected all the stars!${hasnext ? '' : ' This is the last level!'}`;
-  document.getElementById('gm-next-level-btn').style.display = hasnext ? '' : 'none';
+function showLevelCompleteUI(idx, isEmpty) {
+  const hasnext = idx + 1 < game.levels.length;
+  const nextHasStars = hasnext && game.levels[idx + 1].stars.length > 0;
+
+  document.getElementById('gm-lc-heading').textContent = isEmpty
+    ? `⚠️ Level ${idx+1} Has No Stars!`
+    : `⭐ Level ${idx+1} Complete!`;
+
+  document.getElementById('gm-lc-sub').textContent = isEmpty
+    ? `This level is empty — go back to the editor and add some stars!`
+    : nextHasStars
+      ? `Great job, ${game.playerName||'player'}! Ready for Level ${idx+2}?`
+      : hasnext
+        ? `Level ${idx+2} has no stars yet — you can still go there or add stars in Design mode.`
+        : `${game.playerName||'You'} collected all the stars!`;
+
+  const nextBtn = document.getElementById('gm-next-level-btn');
+  nextBtn.style.display  = hasnext ? '' : 'none';
+  nextBtn.textContent    = `Next Level (${idx+2}) →`;
+
   document.getElementById('gm-overlay-lc').classList.remove('hidden');
 }
 
@@ -1378,13 +1396,17 @@ function updatePlay(st) {
       sfxCollect();
       spawnParticles(st,s.x,s.y);
       st.scorePops.push({x:s.x,y:s.y-10,alpha:1,dy:-1.2,text:'+1 ⭐'});
-      if (st.score>=st.totalStars) {
+      if (st.totalStars > 0 && st.score >= st.totalStars) {
         st.won=true;
         spawnParticles(st,pcx,pcy); spawnParticles(st,W/2,H/2);
         if (!st.wonHandled) {
-          st.wonHandled=true;
-          const hasNext = game.levels.slice(playLevelIdx+1).some(lv=>lv.stars.length>0);
-          setTimeout(()=>{ hasNext ? (sfxLevelComplete(), showLevelCompleteUI(playLevelIdx)) : (sfxWin(), showFinalWin()); }, 1400);
+          st.wonHandled = true;
+          const hasNext = playLevelIdx + 1 < game.levels.length;
+          if (hasNext) {
+            setTimeout(() => { sfxLevelComplete(); showLevelCompleteUI(playLevelIdx, false); }, 1200);
+          } else {
+            setTimeout(() => { sfxWin(); showFinalWin(); }, 1400);
+          }
         }
       }
     }
@@ -1464,7 +1486,7 @@ function drawPlay(st) {
 
   // HUD — score + badges
   ctx.fillStyle=HC?'#FFF':'#DDD'; ctx.font=`bold ${LG?22:18}px Arial`; ctx.textAlign='left'; ctx.textBaseline='top';
-  ctx.fillText(`⭐ ${st.score} / ${st.totalStars}`, 32, 30);
+  ctx.fillText(st.totalStars > 0 ? `⭐ ${st.score} / ${st.totalStars}` : `Level ${playLevelIdx+1}`, 32, 30);
 
   let by2=56; const bf=`${LG?14:11}px Arial`;
   if(a11y.slowMode)    {drawPBadge(ctx,'🐌 SLOW',32,by2,'#006666',bf);by2+=22;}
@@ -1478,6 +1500,39 @@ function drawPlay(st) {
 
   // Hit flash
   if(st.hitFlash>0){ctx.fillStyle=`rgba(255,0,0,${st.hitFlash/35*0.55})`;ctx.fillRect(0,0,W,H);}
+
+  // Empty level banner (when a level has no stars)
+  if (st.isEmpty) {
+    ctx.fillStyle='rgba(0,0,0,0.7)'; ctx.fillRect(0,0,W,H);
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.font=`bold ${LG?36:30}px Arial`; ctx.fillStyle='#FFD700';
+    ctx.fillText('⚠️ This level has no stars!', W/2, H/2 - 28);
+    ctx.font=`${LG?20:16}px Arial`; ctx.fillStyle='#aaa';
+    ctx.fillText('Go back to the Editor and add some ⭐ stars.', W/2, H/2 + 16);
+    ctx.font=`${LG?16:13}px Arial`; ctx.fillStyle='#666';
+    ctx.fillText('A popup will appear to take you to the next level…', W/2, H/2 + 50);
+  }
+
+  // Canvas win banner — drawn in addition to the HTML overlay so it's always visible
+  if (st.won && st.wonHandled) {
+    const elapsed = st.winBannerAlpha !== undefined ? st.winBannerAlpha : 0;
+    st.winBannerAlpha = Math.min(1, (st.winBannerAlpha || 0) + 0.04);
+    const alpha = st.winBannerAlpha;
+    // Subtle dark vignette (the HTML overlay handles the main popup)
+    ctx.fillStyle=`rgba(0,0,0,${alpha * 0.45})`; ctx.fillRect(0,0,W,H);
+    // Big "LEVEL COMPLETE" text fades in
+    ctx.globalAlpha = alpha;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.font=`bold ${LG?52:42}px Arial`;
+    ctx.shadowColor='#FFD700'; ctx.shadowBlur=a11y.reduceMotion?0:28;
+    ctx.fillStyle='#FFD700';
+    const hasNext = playLevelIdx + 1 < game.levels.length;
+    ctx.fillText(hasNext ? '⭐  Level Complete!  ⭐' : '🏆  You Won!  🏆', W/2, H/2 - 20);
+    ctx.shadowBlur=0;
+    ctx.font=`${LG?22:18}px Arial`; ctx.fillStyle='#fff';
+    ctx.fillText('(A popup will appear in a moment…)', W/2, H/2 + 36);
+    ctx.globalAlpha=1;
+  }
 }
 
 function drawGuide(ctx,ps,star) {
