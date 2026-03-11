@@ -1,0 +1,848 @@
+<style>
+  #uesl-game-wrapper {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 10px;
+    color: #eee;
+  }
+  #uesl-game-wrapper h1 {
+    text-align: center;
+    font-size: 2rem;
+    color: #FFD700;
+    margin-bottom: 6px;
+    text-shadow: 0 0 12px rgba(255,215,0,0.5);
+  }
+  #uesl-game-wrapper .subtitle {
+    text-align: center;
+    color: #aaa;
+    margin-bottom: 14px;
+    font-size: 0.95rem;
+  }
+
+  /* Settings Panel */
+  #uesl-settings-panel {
+    background: #1e1e2e;
+    border: 1px solid #444;
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    align-items: flex-start;
+  }
+  #uesl-settings-panel .setting-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 160px;
+  }
+  #uesl-settings-panel .setting-group label {
+    font-size: 0.85rem;
+    color: #aaa;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  #uesl-settings-panel select {
+    background: #2a2a3e;
+    color: #fff;
+    border: 1px solid #555;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+  .toggle-row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #00FF88;
+    cursor: pointer;
+  }
+
+  /* Canvas area */
+  #uesl-game-area {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 24px rgba(0,255,136,0.15);
+  }
+  #ueslCanvas {
+    display: block;
+    width: 100%;
+    max-width: 800px;
+    height: auto;
+    border-radius: 12px;
+  }
+
+  /* Controls hint */
+  #uesl-controls-hint {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 0.88rem;
+    color: #888;
+  }
+  #uesl-controls-hint span {
+    background: #2a2a3e;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 2px 8px;
+    margin: 2px;
+    display: inline-block;
+  }
+
+  /* Restart button */
+  #uesl-restart-btn {
+    display: block;
+    margin: 12px auto 0;
+    padding: 10px 30px;
+    background: #00FF88;
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  #uesl-restart-btn:hover { background: #00cc6a; }
+
+  /* Accessibility label */
+  .a11y-badge {
+    display: inline-block;
+    background: #005580;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+</style>
+
+<div id="uesl-game-wrapper">
+  <h1>🎮 UESL Accessibility Arena</h1>
+  <p class="subtitle">Collect all stars to win! Fully customizable for students with IDDs.
+    <span class="a11y-badge">♿ IDD-Friendly</span>
+  </p>
+
+  <!-- Settings Panel -->
+  <div id="uesl-settings-panel" role="region" aria-label="Game Settings">
+
+    <div class="setting-group">
+      <label for="uesl-diff">Difficulty</label>
+      <select id="uesl-diff" title="Select difficulty level">
+        <option value="easy">🟢 Easy</option>
+        <option value="medium">🟡 Medium</option>
+        <option value="hard">🔴 Hard</option>
+      </select>
+    </div>
+
+    <div class="setting-group">
+      <label>Simplified Controls</label>
+      <label class="toggle-row" title="Reduce game to two-key control (SPACE cycles direction, ENTER moves)">
+        <input type="checkbox" id="uesl-single-btn"> Single-Button Mode
+      </label>
+      <label class="toggle-row" title="Halve game speed to give more reaction time">
+        <input type="checkbox" id="uesl-slow"> 🐌 Slow Mode
+      </label>
+    </div>
+
+    <div class="setting-group">
+      <label>Visual Adjustments</label>
+      <label class="toggle-row" title="Black background, bright yellow &amp; white elements">
+        <input type="checkbox" id="uesl-contrast"> ⚡ High Contrast
+      </label>
+      <label class="toggle-row" title="Enlarge player, NPCs, and stars for visibility">
+        <input type="checkbox" id="uesl-large"> 🔍 Large Sprites
+      </label>
+      <label class="toggle-row" title="Reduce animation transitions to minimise sensory overload">
+        <input type="checkbox" id="uesl-reduce-motion"> 🛑 Reduce Motion
+      </label>
+    </div>
+
+    <div class="setting-group">
+      <label>Game Assistance</label>
+      <label class="toggle-row" title="Arrow guides you to the nearest star; NPCs become friendly helpers">
+        <input type="checkbox" id="uesl-guided"> 🧭 Guided Mode
+      </label>
+    </div>
+
+    <div class="setting-group">
+      <label>Audio &amp; Feedback</label>
+      <label class="toggle-row" title="Enable sound effects and music">
+        <input type="checkbox" id="uesl-audio" checked> 🔊 Sound Effects
+      </label>
+      <label class="toggle-row" title="Show celebration animations when collecting stars">
+        <input type="checkbox" id="uesl-celebrate" checked> 🎉 Celebrations
+      </label>
+    </div>
+
+  </div>
+
+  <!-- Game Canvas -->
+  <div id="uesl-game-area">
+    <canvas id="ueslCanvas" width="800" height="520" aria-label="UESL Accessibility Arena game canvas" role="img"></canvas>
+  </div>
+
+  <div id="uesl-controls-hint">
+    <span>Arrow Keys / WASD</span> move &nbsp;|&nbsp;
+    <span>SPACE</span> cycle direction (single-button) &nbsp;|&nbsp;
+    <span>ENTER</span> move in direction (single-button) &nbsp;|&nbsp;
+    <span>R</span> restart
+  </div>
+
+  <button id="uesl-restart-btn" aria-label="Restart Game">↺ Restart Game</button>
+</div>
+
+<script>
+(function() {
+  // ─── Canvas & Context ─────────────────────────────────────────────────────
+  const canvas = document.getElementById('ueslCanvas');
+  const ctx    = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // ─── Accessibility Settings ───────────────────────────────────────────────
+  let settings = {
+    difficulty:    'easy',
+    slowMode:      false,
+    highContrast:  false,
+    largeSprites:  false,
+    reduceMotion:  false,
+    guidedMode:    false,
+    audioEnabled:  true,
+    celebrations:  true,
+    singleButton:  false,
+  };
+
+  // ─── Audio (Web Audio API) ────────────────────────────────────────────────
+  let audioCtx = null;
+  function getAudioCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+  }
+  function playTone(freq, dur, type = 'sine', vol = 0.25) {
+    if (!settings.audioEnabled) return;
+    try {
+      const ac  = getAudioCtx();
+      const osc = ac.createOscillator();
+      const g   = ac.createGain();
+      osc.connect(g); g.connect(ac.destination);
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, ac.currentTime);
+      g.gain.setValueAtTime(vol, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+      osc.start(); osc.stop(ac.currentTime + dur);
+    } catch(e) {}
+  }
+  function sfxCollect() {
+    playTone(660, 0.08, 'sine');
+    setTimeout(() => playTone(880, 0.12, 'sine'), 80);
+    setTimeout(() => playTone(1100, 0.1,  'sine'), 160);
+  }
+  function sfxHit() { playTone(180, 0.35, 'sawtooth', 0.18); }
+  function sfxWin()  {
+    [523,659,784,1047].forEach((f,i) => setTimeout(() => playTone(f, 0.35, 'sine'), i*160));
+  }
+
+  // ─── Game State ───────────────────────────────────────────────────────────
+  let barriers   = [];
+  let stars      = [];
+  let npcs       = [];
+  let totalStars = 0;
+  let score      = 0;
+  let gameOver   = false;
+  let won        = false;
+
+  // Particles for celebration
+  let particles  = [];
+
+  // Hit flash overlay
+  let hitFlash   = 0;
+
+  // Score pop-up list
+  let scorePops  = [];   // [{x,y,alpha,dy,text}]
+
+  // Single-button mode state
+  let sbDir      = 0;    // 0=right 1=down 2=left 3=up
+  let sbMoving   = false;
+
+  // ─── Player ───────────────────────────────────────────────────────────────
+  const player = {
+    x: 80, y: 80,
+    baseSize: 40,
+    get size() { return settings.largeSprites ? 52 : this.baseSize; },
+    vx: 0, vy: 0,
+    baseSpeed: 3.2,
+    get speed() { return this.baseSpeed; },
+    emoji: '🎮',
+  };
+
+  // ─── Keys ─────────────────────────────────────────────────────────────────
+  const keys = {};
+  document.addEventListener('keydown', e => {
+    keys[e.key] = true;
+
+    if (settings.singleButton) {
+      if (e.key === ' ') {
+        sbDir = (sbDir + 1) % 4;
+        e.preventDefault();
+      }
+      if (e.key === 'Enter') {
+        sbMoving = true;
+        e.preventDefault();
+      }
+    }
+    if ((e.key === 'r' || e.key === 'R') && (won || gameOver)) {
+      initLevel();
+    }
+  });
+  document.addEventListener('keyup', e => {
+    delete keys[e.key];
+    if (e.key === 'Enter') sbMoving = false;
+  });
+
+  // ─── Level Configs ────────────────────────────────────────────────────────
+  function buildLevel(diff) {
+    barriers = [];
+    stars    = [];
+    npcs     = [];
+
+    // Outer walls
+    const wall = (x,y,w,h,col) => barriers.push({x,y,w,h,col,label:null});
+    wall(0,   0,   W,  22, null); // top
+    wall(0,   H-22,W,  22, null); // bottom
+    wall(0,   0,   22, H,  null); // left
+    wall(W-22,0,   22, H,  null); // right
+
+    if (diff === 'easy') {
+      // Two simple interior barriers with directional arrows
+      barriers.push({x:180,y:80, w:22,h:230, col:'#FF7700',label:'→ go right'});
+      barriers.push({x:380,y:240,w:230,h:22, col:'#FF7700',label:'↓ go down'});
+
+      // Stars placed in open areas
+      [[120,240],[300,120],[550,140],[550,380],[130,400],[420,400]].forEach(([sx,sy]) => {
+        stars.push({x:sx,y:sy,collected:false});
+      });
+
+      // 1 slow, predictable NPC
+      npcs.push(makeNpc(430,100, [{x:430,y:100},{x:430,y:420}], 0.9, '#FF4444','👾'));
+
+    } else if (diff === 'medium') {
+      barriers.push({x:150,y:70, w:22,h:240, col:'#FF7700',label:'→'});
+      barriers.push({x:380,y:200,w:240,h:22, col:'#FF7700',label:'↓'});
+      barriers.push({x:260,y:360,w:22,h:140, col:'#FF7700',label:'↑'});
+
+      [[100,140],[430,100],[630,260],[320,430],[640,430],[100,370],[480,310]].forEach(([sx,sy]) => {
+        stars.push({x:sx,y:sy,collected:false});
+      });
+
+      npcs.push(makeNpc(480,80,  [{x:480,y:80},{x:480,y:420}], 1.3,'#FF4444','👾'));
+      npcs.push(makeNpc(220,310, [{x:220,y:310},{x:650,y:310}],1.1,'#FF8800','🤖'));
+
+    } else { // hard
+      barriers.push({x:140,y:60, w:22,h:210, col:'#FF7700',label:'→'});
+      barriers.push({x:340,y:140,w:250,h:22, col:'#FF7700',label:'↓'});
+      barriers.push({x:490,y:300,w:22,h:180, col:'#FF7700',label:'↑'});
+      barriers.push({x:200,y:360,w:200,h:22, col:'#FF7700',label:'→'});
+
+      [[80,80],[430,80],[660,240],[360,400],[100,400],[620,430],[310,210],[530,480]].forEach(([sx,sy]) => {
+        stars.push({x:sx,y:sy,collected:false});
+      });
+
+      npcs.push(makeNpc(450,70,  [{x:450,y:70},{x:450,y:360}], 2.2,'#FF4444','👾'));
+      npcs.push(makeNpc(210,280, [{x:210,y:280},{x:630,y:280}],1.9,'#FF8800','🤖'));
+      npcs.push(makeNpc(310,140, [{x:310,y:140},{x:310,y:460}],1.7,'#FF00FF','🦾'));
+    }
+
+    totalStars = stars.length;
+    score      = 0;
+    won        = false;
+    gameOver   = false;
+    hitFlash   = 0;
+    particles  = [];
+    scorePops  = [];
+    player.x   = 60;
+    player.y   = 60;
+    player.vx  = 0;
+    player.vy  = 0;
+  }
+
+  function makeNpc(x, y, path, speed, color, emoji) {
+    return { x, y, size: 36, path, pathIdx: 0, speed, color, emoji };
+  }
+
+  // ─── Collision Helpers ────────────────────────────────────────────────────
+  function rectOverlap(ax,ay,aw,ah, bx,by,bw,bh) {
+    return ax < bx+bw && ax+aw > bx && ay < by+bh && ay+ah > by;
+  }
+  function resolveBarrierCollision() {
+    const ps = player.size;
+    for (const b of barriers) {
+      if (!rectOverlap(player.x, player.y, ps, ps, b.x, b.y, b.w, b.h)) continue;
+      const oL = player.x + ps - b.x;
+      const oR = b.x + b.w - player.x;
+      const oT = player.y + ps - b.y;
+      const oB = b.y + b.h - player.y;
+      const minO = Math.min(oL, oR, oT, oB);
+      if      (minO === oL) player.x = b.x - ps;
+      else if (minO === oR) player.x = b.x + b.w;
+      else if (minO === oT) player.y = b.y - ps;
+      else                  player.y = b.y + b.h;
+    }
+    // Canvas clamp
+    player.x = Math.max(22, Math.min(W - 22 - player.size, player.x));
+    player.y = Math.max(22, Math.min(H - 22 - player.size, player.y));
+  }
+
+  // ─── Nearest uncollected star ─────────────────────────────────────────────
+  function nearestStar() {
+    const px = player.x + player.size/2;
+    const py = player.y + player.size/2;
+    let best = null, bestD = Infinity;
+    for (const s of stars) {
+      if (s.collected) continue;
+      const d = Math.hypot(s.x - px, s.y - py);
+      if (d < bestD) { bestD = d; best = s; }
+    }
+    return best;
+  }
+
+  // ─── Particle System ──────────────────────────────────────────────────────
+  function spawnParticles(cx, cy) {
+    if (!settings.celebrations || settings.reduceMotion) return;
+    const colours = ['#FFD700','#FF6B6B','#00FF88','#00BFFF','#FF69B4'];
+    for (let i = 0; i < 18; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const spd   = 2 + Math.random() * 4;
+      particles.push({
+        x: cx, y: cy,
+        vx: Math.cos(angle)*spd,
+        vy: Math.sin(angle)*spd,
+        life: 1,
+        decay: 0.025 + Math.random()*0.02,
+        r: 4 + Math.random()*5,
+        col: colours[Math.floor(Math.random()*colours.length)]
+      });
+    }
+  }
+
+  // ─── Update ───────────────────────────────────────────────────────────────
+  function update() {
+    if (won || gameOver) return;
+
+    const speedScale = settings.slowMode ? 0.45 : 1;
+    const spd = player.speed * speedScale;
+
+    // Input
+    player.vx = 0; player.vy = 0;
+    if (settings.singleButton) {
+      if (sbMoving) {
+        if (sbDir === 0) player.vx =  spd;
+        if (sbDir === 1) player.vy =  spd;
+        if (sbDir === 2) player.vx = -spd;
+        if (sbDir === 3) player.vy = -spd;
+      }
+    } else {
+      if (keys['ArrowLeft']  || keys['a'] || keys['A']) player.vx -= spd;
+      if (keys['ArrowRight'] || keys['d'] || keys['D']) player.vx += spd;
+      if (keys['ArrowUp']    || keys['w'] || keys['W']) player.vy -= spd;
+      if (keys['ArrowDown']  || keys['s'] || keys['S']) player.vy += spd;
+    }
+
+    player.x += player.vx;
+    player.y += player.vy;
+    resolveBarrierCollision();
+
+    // NPC movement
+    for (const npc of npcs) {
+      const nspd = npc.speed * speedScale;
+      const tgt  = npc.path[npc.pathIdx];
+      const dx   = tgt.x - npc.x;
+      const dy   = tgt.y - npc.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < 3) {
+        npc.pathIdx = (npc.pathIdx + 1) % npc.path.length;
+      } else {
+        npc.x += (dx/dist)*nspd;
+        npc.y += (dy/dist)*nspd;
+      }
+
+      // NPC-player collision (skip in guided mode)
+      if (!settings.guidedMode) {
+        const ns  = npc.size;
+        const ps  = player.size;
+        const cx  = npc.x + ns/2;
+        const cy  = npc.y + ns/2;
+        const pcx = player.x + ps/2;
+        const pcy = player.y + ps/2;
+        if (Math.abs(cx-pcx) < (ns+ps)/2 && Math.abs(cy-pcy) < (ns+ps)/2) {
+          sfxHit();
+          hitFlash = settings.reduceMotion ? 1 : 28;
+          player.x = 60; player.y = 60; // respawn
+        }
+      }
+    }
+
+    // Star collection
+    const ps  = player.size;
+    const pcx = player.x + ps/2;
+    const pcy = player.y + ps/2;
+    for (const s of stars) {
+      if (s.collected) continue;
+      if (Math.hypot(s.x - pcx, s.y - pcy) < ps * 0.7) {
+        s.collected = true;
+        score++;
+        sfxCollect();
+        spawnParticles(s.x, s.y);
+        scorePops.push({ x: s.x, y: s.y - 10, alpha: 1, dy: -1.2, text: '+1 ⭐' });
+        if (score >= totalStars) {
+          won = true;
+          sfxWin();
+          spawnParticles(pcx, pcy);
+          spawnParticles(W/2, H/2);
+        }
+      }
+    }
+
+    // Update particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx; p.y += p.vy;
+      p.vy += 0.08;
+      p.life -= p.decay;
+      if (p.life <= 0) particles.splice(i, 1);
+    }
+
+    // Update score pops
+    for (let i = scorePops.length - 1; i >= 0; i--) {
+      const sp = scorePops[i];
+      sp.y     += sp.dy;
+      sp.alpha -= 0.025;
+      if (sp.alpha <= 0) scorePops.splice(i, 1);
+    }
+
+    if (hitFlash > 0) hitFlash--;
+  }
+
+  // ─── Draw ─────────────────────────────────────────────────────────────────
+  const WALL_COLOR_NORMAL   = '#16213e';
+  const WALL_COLOR_CONTRAST = '#FFFFFF';
+
+  function draw() {
+    const HC = settings.highContrast;
+    const LG = settings.largeSprites;
+
+    // Background
+    ctx.fillStyle = HC ? '#000000' : '#0d0d1a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Subtle grid (skip in reduce-motion or high-contrast)
+    if (!HC && !settings.reduceMotion) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+      ctx.lineWidth = 1;
+      for (let gx = 0; gx <= W; gx += 40) { ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,H); ctx.stroke(); }
+      for (let gy = 0; gy <= H; gy += 40) { ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(W,gy); ctx.stroke(); }
+    }
+
+    // Barriers
+    for (const b of barriers) {
+      ctx.fillStyle = HC ? WALL_COLOR_CONTRAST : (b.col || '#223366');
+      ctx.fillRect(b.x, b.y, b.w, b.h);
+
+      // Directional label/arrow on non-outer barriers with labels
+      if (b.label && b.w > 22 && b.h > 22) {
+        ctx.save();
+        ctx.fillStyle = HC ? '#000' : '#FFF';
+        ctx.font = `bold ${LG ? 16 : 13}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(b.label, b.x + b.w/2, b.y + b.h/2);
+        ctx.restore();
+      }
+
+      // Coloured border on interior barriers for visual cue
+      if (b.label) {
+        ctx.strokeStyle = HC ? '#FFFF00' : '#FF9900';
+        ctx.lineWidth   = HC ? 3 : 2;
+        ctx.strokeRect(b.x, b.y, b.w, b.h);
+      }
+    }
+
+    // Stars
+    const starSz = LG ? 30 : 22;
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    for (const s of stars) {
+      if (s.collected) continue;
+      ctx.font = `${starSz}px Arial`;
+      if (HC) {
+        // High-contrast: plain yellow circle + star symbol
+        ctx.fillStyle = '#FFFF00';
+        ctx.beginPath(); ctx.arc(s.x, s.y, starSz/2 + 2, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#000';
+        ctx.fillText('★', s.x, s.y + 1);
+      } else {
+        // Glow
+        ctx.shadowColor  = '#FFD700';
+        ctx.shadowBlur   = settings.reduceMotion ? 0 : 10;
+        ctx.fillText('⭐', s.x, s.y);
+        ctx.shadowBlur   = 0;
+      }
+
+      // Guided mode: guide arrow from player → nearest star
+      if (settings.guidedMode && nearestStar() === s) {
+        drawGuideArrow(s);
+      }
+    }
+    ctx.shadowBlur = 0;
+
+    // Particles
+    for (const p of particles) {
+      ctx.globalAlpha = p.life;
+      ctx.fillStyle   = p.col;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // NPCs
+    const npcSz = LG ? 48 : 36;
+    for (const npc of npcs) {
+      const cx = npc.x + npc.size/2;
+      const cy = npc.y + npc.size/2;
+
+      if (HC) {
+        ctx.fillStyle = settings.guidedMode ? '#00AAFF' : '#FF0000';
+        ctx.beginPath(); ctx.arc(cx, cy, npcSz/2, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth   = 3;
+        ctx.stroke();
+      } else {
+        // Soft glow around NPC
+        ctx.shadowColor = settings.guidedMode ? '#00AAFF' : npc.color;
+        ctx.shadowBlur  = settings.reduceMotion ? 0 : 14;
+        ctx.fillStyle   = settings.guidedMode ? '#0077cc' : npc.color;
+        ctx.beginPath(); ctx.arc(cx, cy, npcSz/2, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur  = 0;
+      }
+
+      // Emoji face
+      ctx.font         = `${Math.floor(npcSz*0.55)}px Arial`;
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(settings.guidedMode ? '😊' : npc.emoji, cx, cy + 1);
+    }
+
+    // Player
+    const ps  = player.size;
+    const pcx = player.x + ps/2;
+    const pcy = player.y + ps/2;
+
+    if (HC) {
+      ctx.fillStyle = '#FFFF00';
+      ctx.beginPath(); ctx.arc(pcx, pcy, ps/2, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth   = 3;
+      ctx.stroke();
+    } else {
+      ctx.shadowColor = '#00FF88';
+      ctx.shadowBlur  = settings.reduceMotion ? 0 : 18;
+      ctx.fillStyle   = '#00FF88';
+      ctx.beginPath(); ctx.arc(pcx, pcy, ps/2, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur  = 0;
+    }
+    ctx.font         = `${Math.floor(ps*0.55)}px Arial`;
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(player.emoji, pcx, pcy + 1);
+
+    // HUD
+    ctx.shadowBlur = 0;
+    ctx.fillStyle  = HC ? '#FFFFFF' : '#DDDDDD';
+    ctx.font       = `bold ${LG ? 22 : 18}px Arial`;
+    ctx.textAlign  = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(`⭐ ${score} / ${totalStars}`, 32, 30);
+
+    // Active mode badges
+    let badgeY = 56;
+    const badgeFont = `${LG ? 15 : 12}px Arial`;
+    if (settings.slowMode) {
+      drawBadge('🐌 SLOW MODE', 32, badgeY, '#006666', badgeFont); badgeY += 22;
+    }
+    if (settings.guidedMode) {
+      drawBadge('🧭 GUIDED', 32, badgeY, '#005500', badgeFont); badgeY += 22;
+    }
+    if (settings.singleButton) {
+      const dirs = ['→ RIGHT','↓ DOWN','← LEFT','↑ UP'];
+      drawBadge(`🕹️ ${dirs[sbDir]}`, 32, badgeY, '#330066', badgeFont); badgeY += 22;
+    }
+
+    // Score pops
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    for (const sp of scorePops) {
+      ctx.globalAlpha = sp.alpha;
+      ctx.font        = `bold ${LG ? 20 : 16}px Arial`;
+      ctx.fillStyle   = '#FFD700';
+      ctx.fillText(sp.text, sp.x, sp.y);
+    }
+    ctx.globalAlpha = 1;
+
+    // Hit flash overlay
+    if (hitFlash > 0) {
+      ctx.fillStyle = `rgba(255,0,0,${hitFlash/35 * 0.55})`;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    // Win overlay
+    if (won) {
+      ctx.fillStyle = 'rgba(0,0,0,0.72)';
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'middle';
+
+      ctx.font      = `bold ${LG ? 58 : 50}px Arial`;
+      ctx.fillStyle = '#FFD700';
+      ctx.shadowColor = '#FFD700';
+      ctx.shadowBlur  = settings.reduceMotion ? 0 : 24;
+      ctx.fillText('🎉  YOU WIN!  🎉', W/2, H/2 - 50);
+      ctx.shadowBlur = 0;
+
+      ctx.font      = `${LG ? 26 : 22}px Arial`;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillText(`Stars collected: ${score} / ${totalStars}`, W/2, H/2 + 10);
+      ctx.font      = `${LG ? 20 : 16}px Arial`;
+      ctx.fillStyle = '#AAAAAA';
+      ctx.fillText('Press R or click Restart to play again', W/2, H/2 + 50);
+    }
+  }
+
+  // ─── Guide Arrow ──────────────────────────────────────────────────────────
+  function drawGuideArrow(star) {
+    const pcx = player.x + player.size/2;
+    const pcy = player.y + player.size/2;
+    const angle = Math.atan2(star.y - pcy, star.x - pcx);
+    const startDist = player.size * 0.65;
+    const len = Math.max(0, Math.hypot(star.x-pcx, star.y-pcy) - player.size - 10);
+    if (len < 12) return;
+    const arrowLen = Math.min(len, 55);
+
+    const sx = pcx + Math.cos(angle)*startDist;
+    const sy = pcy + Math.sin(angle)*startDist;
+    const ex = sx  + Math.cos(angle)*arrowLen;
+    const ey = sy  + Math.sin(angle)*arrowLen;
+
+    ctx.save();
+    ctx.strokeStyle = settings.highContrast ? '#FFFFFF' : '#88FF88';
+    ctx.lineWidth   = settings.largeSprites ? 4 : 3;
+    ctx.setLineDash([6,4]);
+    ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex,ey); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Arrowhead
+    ctx.fillStyle = settings.highContrast ? '#FFFFFF' : '#88FF88';
+    ctx.beginPath();
+    ctx.moveTo(ex, ey);
+    ctx.lineTo(ex - 10*Math.cos(angle-0.45), ey - 10*Math.sin(angle-0.45));
+    ctx.lineTo(ex - 10*Math.cos(angle+0.45), ey - 10*Math.sin(angle+0.45));
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  // ─── HUD badge helper ────────────────────────────────────────────────────
+  function drawBadge(text, x, y, bg, font) {
+    ctx.font = font;
+    ctx.textAlign    = 'left';
+    ctx.textBaseline = 'top';
+    const tw = ctx.measureText(text).width;
+    ctx.fillStyle = bg;
+    roundRect(ctx, x-4, y-2, tw+12, 18, 6);
+    ctx.fill();
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText(text, x+2, y+1);
+  }
+
+  function roundRect(c,x,y,w,h,r) {
+    c.beginPath();
+    c.moveTo(x+r,y); c.lineTo(x+w-r,y); c.arcTo(x+w,y,x+w,y+r,r);
+    c.lineTo(x+w,y+h-r); c.arcTo(x+w,y+h,x+w-r,y+h,r);
+    c.lineTo(x+r,y+h); c.arcTo(x,y+h,x,y+h-r,r);
+    c.lineTo(x,y+r); c.arcTo(x,y,x+r,y,r);
+    c.closePath();
+  }
+
+  // ─── Init & Loop ──────────────────────────────────────────────────────────
+  function initLevel() {
+    buildLevel(settings.difficulty);
+    sbDir     = 0;
+    sbMoving  = false;
+  }
+
+  function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  // ─── Settings Wiring ──────────────────────────────────────────────────────
+  document.getElementById('uesl-diff').addEventListener('change', e => {
+    settings.difficulty = e.target.value;
+    initLevel();
+  });
+  document.getElementById('uesl-slow').addEventListener('change', e => {
+    settings.slowMode = e.target.checked;
+  });
+  document.getElementById('uesl-contrast').addEventListener('change', e => {
+    settings.highContrast = e.target.checked;
+  });
+  document.getElementById('uesl-large').addEventListener('change', e => {
+    settings.largeSprites = e.target.checked;
+  });
+  document.getElementById('uesl-reduce-motion').addEventListener('change', e => {
+    settings.reduceMotion = e.target.checked;
+    if (e.target.checked) particles = [];
+  });
+  document.getElementById('uesl-guided').addEventListener('change', e => {
+    settings.guidedMode = e.target.checked;
+  });
+  document.getElementById('uesl-audio').addEventListener('change', e => {
+    settings.audioEnabled = e.target.checked;
+  });
+  document.getElementById('uesl-celebrate').addEventListener('change', e => {
+    settings.celebrations = e.target.checked;
+  });
+  document.getElementById('uesl-single-btn').addEventListener('change', e => {
+    settings.singleButton = e.target.checked;
+    sbDir = 0; sbMoving = false;
+  });
+  document.getElementById('uesl-restart-btn').addEventListener('click', () => {
+    initLevel();
+    // Resume AudioContext on user gesture
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  });
+
+  // Resume audio on first canvas interaction
+  canvas.addEventListener('click', () => {
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  }, { once: true });
+
+  // Kick off
+  initLevel();
+  loop();
+})();
+</script>

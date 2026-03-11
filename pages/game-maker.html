@@ -1,0 +1,1751 @@
+---
+layout: opencs
+title: "UESL Game Maker"
+description: "Design, build, and play your own accessible game — made for UESL students with IDDs."
+permalink: /game-maker/
+---
+
+<style>
+/* ─── Reset & Base ──────────────────────────────────────────────────────── */
+#gm-app * { box-sizing: border-box; }
+#gm-app {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #0d0d1a;
+  color: #eee;
+  min-height: 100vh;
+  padding: 10px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ─── Header ────────────────────────────────────────────────────────────── */
+#gm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+#gm-header h1 {
+  font-size: 1.7rem;
+  color: #FFD700;
+  margin: 0;
+  text-shadow: 0 0 14px rgba(255,215,0,0.4);
+}
+#gm-tabs {
+  display: flex;
+  gap: 8px;
+}
+.gm-tab {
+  padding: 10px 22px;
+  border: 2px solid #444;
+  border-radius: 30px;
+  background: #1e1e2e;
+  color: #aaa;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.gm-tab:hover { border-color: #888; color: #fff; }
+.gm-tab.active { background: #FFD700; color: #000; border-color: #FFD700; }
+
+/* ─── Mode panels ───────────────────────────────────────────────────────── */
+.gm-mode { display: none; }
+.gm-mode.active { display: block; }
+
+/* ─── Design Layout ─────────────────────────────────────────────────────── */
+#gm-design-layout {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+/* ─── Toolbar (left column) ─────────────────────────────────────────────── */
+#gm-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 120px;
+}
+#gm-toolbar h3 {
+  margin: 0 0 4px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #888;
+}
+.gm-tool-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 6px;
+  border: 2px solid #333;
+  border-radius: 10px;
+  background: #1e1e2e;
+  color: #ddd;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  gap: 4px;
+  line-height: 1.2;
+  text-align: center;
+}
+.gm-tool-btn .gm-tool-icon { font-size: 1.6rem; }
+.gm-tool-btn:hover { border-color: #666; background: #252540; }
+.gm-tool-btn.active { border-color: #FFD700; background: #2a260a; color: #FFD700; }
+
+.gm-toolbar-sep { height: 1px; background: #333; margin: 4px 0; }
+
+.gm-action-btn {
+  padding: 8px 6px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: #1e1e2e;
+  color: #ccc;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+  width: 100%;
+}
+.gm-action-btn:hover { background: #252540; color: #fff; }
+.gm-action-btn.danger { border-color: #662222; color: #ff9999; }
+.gm-action-btn.danger:hover { background: #3a1010; }
+.gm-action-btn.primary { border-color: #FFD700; color: #FFD700; }
+.gm-action-btn.primary:hover { background: #2a260a; }
+
+/* ─── Editor Canvas ─────────────────────────────────────────────────────── */
+#gm-editor-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+#gm-editor-canvas {
+  display: block;
+  border: 2px solid #333;
+  border-radius: 10px;
+  cursor: crosshair;
+  background: #0d0d1a;
+  max-width: 100%;
+}
+#gm-status-bar {
+  font-size: 0.82rem;
+  color: #888;
+  min-height: 20px;
+  padding: 0 4px;
+}
+
+/* ─── Properties Panel (right column) ──────────────────────────────────── */
+#gm-props {
+  width: 190px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+#gm-props-panel {
+  background: #1a1a2a;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 0.88rem;
+}
+#gm-props-panel h3 {
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #aaa;
+}
+.gm-prop-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.gm-prop-row label {
+  font-size: 0.78rem;
+  color: #888;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+.gm-prop-row input[type="color"] {
+  width: 100%;
+  height: 34px;
+  border: 1px solid #444;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #111;
+}
+.gm-prop-row input[type="range"] {
+  width: 100%;
+  accent-color: #FFD700;
+}
+.gm-prop-row select,
+.gm-prop-row input[type="text"] {
+  width: 100%;
+  background: #111;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 0.88rem;
+}
+.gm-prop-row .range-val {
+  font-size: 0.75rem;
+  color: #aaa;
+  text-align: right;
+}
+.gm-prop-row .emoji-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.gm-emoji-btn {
+  font-size: 1.3rem;
+  padding: 4px;
+  border: 2px solid #333;
+  border-radius: 6px;
+  background: #111;
+  cursor: pointer;
+  transition: border-color 0.1s;
+}
+.gm-emoji-btn.active { border-color: #FFD700; }
+.gm-delete-btn {
+  width: 100%;
+  padding: 7px;
+  border: 1px solid #662222;
+  border-radius: 6px;
+  background: #3a1010;
+  color: #ff9999;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.gm-delete-btn:hover { background: #551515; }
+
+/* Legend / hint box */
+#gm-hint-box {
+  background: #1a1a2a;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.8rem;
+  color: #888;
+  line-height: 1.6;
+}
+#gm-hint-box b { color: #FFD700; }
+
+/* ─── Play Mode ─────────────────────────────────────────────────────────── */
+#gm-play-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+#gm-play-top h2 { margin: 0; color: #FFD700; font-size: 1.3rem; }
+#gm-back-btn {
+  padding: 8px 18px;
+  border: 2px solid #FFD700;
+  border-radius: 20px;
+  background: transparent;
+  color: #FFD700;
+  font-size: 0.95rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+#gm-back-btn:hover { background: #2a260a; }
+#gm-play-canvas {
+  display: block;
+  border: 2px solid #333;
+  border-radius: 10px;
+  max-width: 100%;
+}
+#gm-play-controls-hint {
+  margin-top: 8px;
+  font-size: 0.82rem;
+  color: #777;
+  text-align: center;
+}
+#gm-play-controls-hint span {
+  background: #1e1e2e;
+  border: 1px solid #333;
+  border-radius: 5px;
+  padding: 2px 8px;
+  margin: 2px;
+  display: inline-block;
+}
+
+/* ─── Settings Mode ─────────────────────────────────────────────────────── */
+#gm-settings-panel {
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gm-settings-section {
+  background: #1a1a2a;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 16px 20px;
+}
+.gm-settings-section h3 {
+  margin: 0 0 12px;
+  color: #FFD700;
+  font-size: 1rem;
+}
+.gm-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.gm-toggle-row input[type="checkbox"] {
+  width: 18px; height: 18px;
+  accent-color: #00FF88;
+  cursor: pointer;
+}
+.gm-toggle-row .gm-toggle-desc {
+  font-size: 0.78rem;
+  color: #888;
+  display: block;
+}
+
+/* Responsive */
+@media (max-width: 720px) {
+  #gm-design-layout { flex-direction: column; }
+  #gm-toolbar { flex-direction: row; flex-wrap: wrap; min-width: unset; }
+  .gm-tool-btn { min-width: 80px; }
+  #gm-props { width: 100%; }
+}
+</style>
+
+<div id="gm-app">
+
+  <!-- ═══ Header ═════════════════════════════════════════════════════════════ -->
+  <div id="gm-header">
+    <h1>🎮 UESL Game Maker</h1>
+    <div id="gm-tabs">
+      <button class="gm-tab active" data-mode="design">🎨 Design</button>
+      <button class="gm-tab"        data-mode="play">▶ Play</button>
+      <button class="gm-tab"        data-mode="settings">⚙️ Settings</button>
+    </div>
+  </div>
+
+  <!-- ═══ DESIGN MODE ════════════════════════════════════════════════════════ -->
+  <div id="gm-mode-design" class="gm-mode active">
+    <div id="gm-design-layout">
+
+      <!-- Left: Tool palette -->
+      <div id="gm-toolbar">
+        <h3>Tools</h3>
+        <button class="gm-tool-btn active" data-tool="select">
+          <span class="gm-tool-icon">🖱️</span>Select
+        </button>
+        <button class="gm-tool-btn" data-tool="player">
+          <span class="gm-tool-icon">🎮</span>Player Start
+        </button>
+        <button class="gm-tool-btn" data-tool="wall">
+          <span class="gm-tool-icon">🧱</span>Draw Wall
+        </button>
+        <button class="gm-tool-btn" data-tool="star">
+          <span class="gm-tool-icon">⭐</span>Place Star
+        </button>
+        <button class="gm-tool-btn" data-tool="npc">
+          <span class="gm-tool-icon">👾</span>Place NPC
+        </button>
+        <button class="gm-tool-btn" data-tool="erase">
+          <span class="gm-tool-icon">🗑️</span>Erase
+        </button>
+
+        <div class="gm-toolbar-sep"></div>
+        <h3>Actions</h3>
+        <button class="gm-action-btn" id="gm-undo-btn">↩ Undo</button>
+        <button class="gm-action-btn" id="gm-redo-btn">↪ Redo</button>
+        <button class="gm-action-btn danger" id="gm-clear-btn">🗑 Clear All</button>
+        <div class="gm-toolbar-sep"></div>
+        <h3>Level</h3>
+        <button class="gm-action-btn" id="gm-save-btn">💾 Save</button>
+        <button class="gm-action-btn" id="gm-load-btn">📂 Load</button>
+        <button class="gm-action-btn primary" id="gm-play-btn">▶ Play!</button>
+      </div>
+
+      <!-- Center: Editor Canvas -->
+      <div id="gm-editor-wrap">
+        <canvas id="gm-editor-canvas" width="800" height="520"></canvas>
+        <div id="gm-status-bar">Click a tool to start building your game!</div>
+      </div>
+
+      <!-- Right: Properties + Hints -->
+      <div id="gm-props">
+        <div id="gm-props-panel">
+          <h3>Properties</h3>
+          <div id="gm-props-content">
+            <p style="color:#666;font-size:0.82rem;margin:0;">Select an object or choose a tool to see options.</p>
+          </div>
+        </div>
+        <div id="gm-hint-box">
+          <b>🖱️ Select</b> — click to select &amp; move<br>
+          <b>🧱 Wall</b> — click + drag to draw<br>
+          <b>⭐ Star</b> — click to place<br>
+          <b>👾 NPC</b> — click start, click end<br>
+          <b>🎮 Player</b> — click to set spawn<br>
+          <b>🗑️ Erase</b> — click to delete<br>
+          <b>DEL</b> — delete selected
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ PLAY MODE ══════════════════════════════════════════════════════════ -->
+  <div id="gm-mode-play" class="gm-mode">
+    <div id="gm-play-top">
+      <button id="gm-back-btn">← Back to Editor</button>
+      <h2>▶ Playing Your Game</h2>
+      <span style="font-size:0.85rem;color:#888;">Press <kbd>R</kbd> to restart</span>
+    </div>
+    <canvas id="gm-play-canvas" width="800" height="520"></canvas>
+    <div id="gm-play-controls-hint">
+      <span>Arrow Keys / WASD</span> move &nbsp;|&nbsp;
+      <span>SPACE</span> cycle dir (single-button) &nbsp;|&nbsp;
+      <span>ENTER</span> move (single-button) &nbsp;|&nbsp;
+      <span>R</span> restart
+    </div>
+  </div>
+
+  <!-- ═══ SETTINGS MODE ═════════════════════════════════════════════════════ -->
+  <div id="gm-mode-settings" class="gm-mode">
+    <div id="gm-settings-panel">
+
+      <div class="gm-settings-section">
+        <h3>♿ Accessibility — Controls</h3>
+        <label class="gm-toggle-row">
+          <input type="checkbox" id="gs-slow">
+          <span>🐌 Slow Mode<span class="gm-toggle-desc">Halves game speed — gives more time to react</span></span>
+        </label>
+        <label class="gm-toggle-row">
+          <input type="checkbox" id="gs-single">
+          <span>🕹️ Single-Button Mode<span class="gm-toggle-desc">SPACE cycles direction, ENTER moves</span></span>
+        </label>
+      </div>
+
+      <div class="gm-settings-section">
+        <h3>♿ Accessibility — Visuals</h3>
+        <label class="gm-toggle-row">
+          <input type="checkbox" id="gs-contrast">
+          <span>⚡ High-Contrast Mode<span class="gm-toggle-desc">Black bg, bright yellow &amp; white</span></span>
+        </label>
+        <label class="gm-toggle-row">
+          <input type="checkbox" id="gs-large">
+          <span>🔍 Large Sprites<span class="gm-toggle-desc">Bigger player, NPCs, and stars</span></span>
+        </label>
+        <label class="gm-toggle-row">
+          <input type="checkbox" id="gs-reduce">
+          <span>🛑 Reduce Motion<span class="gm-toggle-desc">Removes particles and screen flash</span></span>
+        </label>
+      </div>
+
+      <div class="gm-settings-section">
+        <h3>♿ Accessibility — Guidance</h3>
+        <label class="gm-toggle-row">
+          <input type="checkbox" id="gs-guided">
+          <span>🧭 Guided Mode<span class="gm-toggle-desc">Arrow points to nearest star; NPCs become friendly</span></span>
+        </label>
+      </div>
+
+      <div class="gm-settings-section">
+        <h3>🔊 Audio &amp; Feedback</h3>
+        <label class="gm-toggle-row">
+          <input type="checkbox" id="gs-audio" checked>
+          <span>🔊 Sound Effects<span class="gm-toggle-desc">Collect sounds, win jingle, hit sound</span></span>
+        </label>
+        <label class="gm-toggle-row">
+          <input type="checkbox" id="gs-celebrate" checked>
+          <span>🎉 Celebrations<span class="gm-toggle-desc">Particle bursts on star collection</span></span>
+        </label>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- #gm-app -->
+
+<script>
+(function () {
+'use strict';
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CONSTANTS
+═══════════════════════════════════════════════════════════════════════════ */
+const GRID   = 20;
+const W      = 800;
+const H      = 520;
+const BORDER = 22;
+const NPC_EMOJIS = ['👾','🤖','🦾','👻','🐲','🦊'];
+
+const WALL_COLORS = [
+  '#3355BB','#CC4400','#005533','#882299',
+  '#886600','#226677','#444444','#FF6699',
+];
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LEVEL DATA MODEL
+   All positions in canvas pixels; barriers in {x,y,w,h}
+═══════════════════════════════════════════════════════════════════════════ */
+let level = emptyLevel();
+
+function emptyLevel() {
+  return {
+    playerStart: { x: 60, y: 60 },
+    barriers: [],   // { id, x, y, w, h, col, label }
+    stars:    [],   // { id, x, y }
+    npcs:     [],   // { id, x, y, ex, ey, speed, color, emoji }
+  };
+}
+
+let nextId = 1;
+function uid() { return nextId++; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HISTORY (undo / redo)
+═══════════════════════════════════════════════════════════════════════════ */
+const history = [];
+let histIdx   = -1;
+
+function saveHistory() {
+  history.splice(histIdx + 1);
+  history.push(JSON.parse(JSON.stringify(level)));
+  histIdx = history.length - 1;
+  if (history.length > 60) { history.shift(); histIdx--; }
+}
+
+function undo() {
+  if (histIdx <= 0) return;
+  histIdx--;
+  level = JSON.parse(JSON.stringify(history[histIdx]));
+  editorState.selectedId = null;
+  renderEditor();
+  updatePropsPanel();
+}
+
+function redo() {
+  if (histIdx >= history.length - 1) return;
+  histIdx++;
+  level = JSON.parse(JSON.stringify(history[histIdx]));
+  editorState.selectedId = null;
+  renderEditor();
+  updatePropsPanel();
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EDITOR STATE
+═══════════════════════════════════════════════════════════════════════════ */
+const editorState = {
+  tool:           'select',
+  dragging:       false,
+  dragStart:      null,
+  dragObj:        null,     // object being moved in select mode
+  dragObjOrigin:  null,
+  selectedId:     null,
+  npcPhase:       0,        // 0 = place start, 1 = place end
+  pendingNpc:     null,
+  wallColor:      WALL_COLORS[0],
+  wallLabel:      '',
+  npcColor:       '#FF4444',
+  npcEmoji:       '👾',
+  npcSpeed:       1.2,
+  mouseX:         0,
+  mouseY:         0,
+};
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SNAP HELPER
+═══════════════════════════════════════════════════════════════════════════ */
+function snap(v) { return Math.round(v / GRID) * GRID; }
+function snapPos(x, y) { return { x: snap(x), y: snap(y) }; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ACCESSIBILITY SETTINGS
+═══════════════════════════════════════════════════════════════════════════ */
+const a11y = {
+  slowMode:      false,
+  singleButton:  false,
+  highContrast:  false,
+  largeSprites:  false,
+  reduceMotion:  false,
+  guidedMode:    false,
+  audioEnabled:  true,
+  celebrations:  true,
+};
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EDITOR CANVAS
+═══════════════════════════════════════════════════════════════════════════ */
+const eCanvas = document.getElementById('gm-editor-canvas');
+const eCtx    = eCanvas.getContext('2d');
+const statusBar = document.getElementById('gm-status-bar');
+
+function canvasPoint(e) {
+  const r = eCanvas.getBoundingClientRect();
+  const scaleX = W / r.width;
+  const scaleY = H / r.height;
+  return {
+    x: (e.clientX - r.left) * scaleX,
+    y: (e.clientY - r.top)  * scaleY,
+  };
+}
+
+function setStatus(msg) { statusBar.textContent = msg; }
+
+/* ── Hit testing ─────────────────────────────────────────────────────────── */
+function hitTest(cx, cy) {
+  const radius = 16;
+  // Check stars
+  for (const s of level.stars) {
+    if (Math.hypot(s.x - cx, s.y - cy) < radius) return { type: 'star', obj: s };
+  }
+  // Check NPCs (by start point)
+  for (const n of level.npcs) {
+    if (Math.hypot(n.x - cx, n.y - cy) < radius) return { type: 'npc', obj: n };
+  }
+  // Check barriers
+  for (let i = level.barriers.length - 1; i >= 0; i--) {
+    const b = level.barriers[i];
+    const x1 = Math.min(b.x, b.x + b.w);
+    const y1 = Math.min(b.y, b.y + b.h);
+    const x2 = Math.max(b.x, b.x + b.w);
+    const y2 = Math.max(b.y, b.y + b.h);
+    if (cx >= x1 && cx <= x2 && cy >= y1 && cy <= y2) return { type: 'barrier', obj: b };
+  }
+  // Check player start
+  const ps = level.playerStart;
+  if (Math.hypot(ps.x - cx, ps.y - cy) < 20) return { type: 'playerStart', obj: ps };
+  return null;
+}
+
+/* ── Mouse Events ────────────────────────────────────────────────────────── */
+eCanvas.addEventListener('mousedown', onMouseDown);
+eCanvas.addEventListener('mousemove', onMouseMove);
+eCanvas.addEventListener('mouseup',   onMouseUp);
+eCanvas.addEventListener('mouseleave',() => { editorState.dragging = false; renderEditor(); });
+
+function onMouseDown(e) {
+  const { x, y } = canvasPoint(e);
+  const sx = snap(x), sy = snap(y);
+  const t = editorState.tool;
+
+  if (t === 'select') {
+    const hit = hitTest(x, y);
+    if (hit) {
+      editorState.selectedId = hit.obj.id ?? hit.type;
+      editorState.dragging      = true;
+      editorState.dragObj       = hit;
+      editorState.dragObjOrigin = { x: hit.obj.x, y: hit.obj.y };
+      editorState.dragStart     = { x, y };
+      updatePropsPanel();
+    } else {
+      editorState.selectedId = null;
+      updatePropsPanel();
+    }
+
+  } else if (t === 'wall') {
+    editorState.dragging   = true;
+    editorState.dragStart  = { x: sx, y: sy };
+
+  } else if (t === 'star') {
+    const sp = snapPos(x - 10, y - 10);
+    level.stars.push({ id: uid(), x: sp.x + 10, y: sp.y + 10 });
+    saveHistory();
+
+  } else if (t === 'npc') {
+    if (editorState.npcPhase === 0) {
+      editorState.pendingNpc = {
+        id: uid(),
+        x: sx, y: sy,
+        ex: sx + 100, ey: sy,
+        speed: editorState.npcSpeed,
+        color: editorState.npcColor,
+        emoji: editorState.npcEmoji,
+      };
+      editorState.npcPhase = 1;
+      setStatus('✅ NPC placed! Now click where it should patrol to.');
+      updatePropsPanel();
+
+    } else if (editorState.npcPhase === 1) {
+      const n = editorState.pendingNpc;
+      n.ex = sx; n.ey = sy;
+      level.npcs.push(n);
+      editorState.pendingNpc = null;
+      editorState.npcPhase   = 0;
+      saveHistory();
+      setStatus('👾 NPC added! Place another or switch tools.');
+    }
+
+  } else if (t === 'player') {
+    level.playerStart = { x: sx, y: sy };
+    saveHistory();
+    setStatus('🎮 Player start set!');
+
+  } else if (t === 'erase') {
+    const hit = hitTest(x, y);
+    if (hit) {
+      eraseHit(hit);
+      saveHistory();
+    }
+  }
+
+  renderEditor();
+}
+
+function onMouseMove(e) {
+  const { x, y } = canvasPoint(e);
+  editorState.mouseX = x;
+  editorState.mouseY = y;
+  const t = editorState.tool;
+
+  if (editorState.dragging) {
+    if (t === 'wall') {
+      // Preview wall being drawn — just re-render
+    } else if (t === 'select' && editorState.dragObj) {
+      const dx = x - editorState.dragStart.x;
+      const dy = y - editorState.dragStart.y;
+      const obj = editorState.dragObj.obj;
+      obj.x = snap(editorState.dragObjOrigin.x + dx);
+      obj.y = snap(editorState.dragObjOrigin.y + dy);
+    }
+  }
+
+  renderEditor();
+}
+
+function onMouseUp(e) {
+  const { x, y } = canvasPoint(e);
+  const sx = snap(x), sy = snap(y);
+  const t = editorState.tool;
+
+  if (t === 'wall' && editorState.dragging && editorState.dragStart) {
+    const ds = editorState.dragStart;
+    let bx = Math.min(ds.x, sx);
+    let by = Math.min(ds.y, sy);
+    let bw = Math.abs(sx - ds.x);
+    let bh = Math.abs(sy - ds.y);
+    bw = Math.max(bw, GRID);
+    bh = Math.max(bh, GRID);
+    // Clamp inside canvas
+    bx = Math.max(BORDER, bx); by = Math.max(BORDER, by);
+    bw = Math.min(bw, W - BORDER - bx); bh = Math.min(bh, H - BORDER - by);
+    level.barriers.push({
+      id: uid(), x: bx, y: by, w: bw, h: bh,
+      col:   editorState.wallColor,
+      label: editorState.wallLabel,
+    });
+    saveHistory();
+
+  } else if (t === 'select' && editorState.dragObj) {
+    saveHistory();
+  }
+
+  editorState.dragging  = false;
+  editorState.dragStart = null;
+  editorState.dragObj   = null;
+  renderEditor();
+}
+
+function eraseHit(hit) {
+  if (hit.type === 'barrier')     level.barriers = level.barriers.filter(b => b.id !== hit.obj.id);
+  if (hit.type === 'star')        level.stars    = level.stars.filter(s => s.id !== hit.obj.id);
+  if (hit.type === 'npc')         level.npcs     = level.npcs.filter(n => n.id !== hit.obj.id);
+  if (hit.type === 'playerStart') level.playerStart = { x: 60, y: 60 };
+}
+
+/* Keyboard shortcut: DEL deletes selected */
+document.addEventListener('keydown', e => {
+  if ((e.key === 'Delete' || e.key === 'Backspace') && editorState.selectedId !== null) {
+    const hit = hitTest(
+      editorState.mouseX, editorState.mouseY
+    );
+    if (hit) { eraseHit(hit); saveHistory(); renderEditor(); updatePropsPanel(); }
+  }
+  if (e.ctrlKey && e.key === 'z') { undo(); e.preventDefault(); }
+  if (e.ctrlKey && e.key === 'y') { redo(); e.preventDefault(); }
+});
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EDITOR RENDERER
+═══════════════════════════════════════════════════════════════════════════ */
+function renderEditor() {
+  const ctx  = eCtx;
+  const mx   = editorState.mouseX;
+  const my   = editorState.mouseY;
+  const t    = editorState.tool;
+
+  // Background
+  ctx.fillStyle = '#0d0d1a';
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  for (let gx = 0; gx <= W; gx += GRID) { ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,H); ctx.stroke(); }
+  for (let gy = 0; gy <= H; gy += GRID) { ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(W,gy); ctx.stroke(); }
+
+  // Border walls (always present)
+  ctx.fillStyle = '#223366';
+  ctx.fillRect(0,      0,      W,      BORDER);
+  ctx.fillRect(0,      H-BORDER, W,    BORDER);
+  ctx.fillRect(0,      0,      BORDER, H);
+  ctx.fillRect(W-BORDER,0,     BORDER, H);
+  ctx.strokeStyle = '#4466BB';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(BORDER, BORDER, W - BORDER*2, H - BORDER*2);
+
+  // Barriers
+  for (const b of level.barriers) {
+    const sel = editorState.selectedId === b.id;
+    drawBarrier(ctx, b, sel);
+  }
+
+  // Stars
+  for (const s of level.stars) {
+    const sel = editorState.selectedId === s.id;
+    drawStar(ctx, s.x, s.y, sel);
+  }
+
+  // NPCs
+  for (const n of level.npcs) {
+    const sel = editorState.selectedId === n.id;
+    drawNpcEditor(ctx, n, sel);
+  }
+
+  // Player start
+  drawPlayerStart(ctx, level.playerStart);
+
+  // ── Tool Previews ──────────────────────────────────────────────────────
+  if (t === 'wall' && editorState.dragging && editorState.dragStart) {
+    const ds = editorState.dragStart;
+    const sx = snap(mx), sy = snap(my);
+    const bx = Math.min(ds.x, sx), by = Math.min(ds.y, sy);
+    const bw = Math.max(Math.abs(sx - ds.x), GRID);
+    const bh = Math.max(Math.abs(sy - ds.y), GRID);
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle   = editorState.wallColor;
+    ctx.fillRect(bx, by, bw, bh);
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth   = 2;
+    ctx.strokeRect(bx, by, bw, bh);
+
+  } else if (t === 'wall') {
+    // Ghost
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle   = editorState.wallColor;
+    const gs = snap(mx), gsy = snap(my);
+    ctx.fillRect(gs, gsy, GRID*3, GRID*2);
+    ctx.globalAlpha = 1;
+
+  } else if (t === 'star') {
+    ctx.globalAlpha = 0.45;
+    drawStar(ctx, snap(mx)+10, snap(my)+10, false);
+    ctx.globalAlpha = 1;
+
+  } else if (t === 'npc' && editorState.npcPhase === 0) {
+    ctx.globalAlpha = 0.45;
+    ctx.fillStyle   = editorState.npcColor;
+    ctx.beginPath(); ctx.arc(snap(mx), snap(my), 18, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+
+  } else if (t === 'npc' && editorState.npcPhase === 1 && editorState.pendingNpc) {
+    const n = editorState.pendingNpc;
+    // Show start + dashed line to cursor
+    ctx.globalAlpha = 0.8;
+    ctx.fillStyle   = n.color;
+    ctx.beginPath(); ctx.arc(n.x, n.y, 18, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 0.5;
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth   = 2;
+    ctx.setLineDash([6,4]);
+    ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(snap(mx), snap(my)); ctx.stroke();
+    ctx.setLineDash([]);
+    // Ghost endpoint
+    ctx.globalAlpha = 0.4;
+    ctx.fillStyle   = n.color;
+    ctx.beginPath(); ctx.arc(snap(mx), snap(my), 14, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+
+  } else if (t === 'player') {
+    ctx.globalAlpha = 0.45;
+    drawPlayerStart(ctx, { x: snap(mx), y: snap(my) });
+    ctx.globalAlpha = 1;
+  }
+
+  // Coordinates readout
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.fillRect(W - 100, H - 24, 100, 24);
+  ctx.fillStyle = '#888';
+  ctx.font = '11px monospace';
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText(`${Math.floor(mx)}, ${Math.floor(my)}`, W - 6, H - 4);
+}
+
+function drawBarrier(ctx, b, selected) {
+  const x1 = Math.min(b.x, b.x + b.w), y1 = Math.min(b.y, b.y + b.h);
+  const bw  = Math.abs(b.w), bh = Math.abs(b.h);
+  ctx.fillStyle = b.col || '#223366';
+  ctx.fillRect(x1, y1, bw, bh);
+  ctx.strokeStyle = selected ? '#FFD700' : 'rgba(255,255,255,0.25)';
+  ctx.lineWidth   = selected ? 3 : 1.5;
+  ctx.strokeRect(x1, y1, bw, bh);
+
+  if (b.label && bw > 30 && bh > 14) {
+    ctx.fillStyle    = '#FFF';
+    ctx.font         = 'bold 12px Arial';
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(b.label, x1 + bw/2, y1 + bh/2);
+  }
+
+  if (selected) {
+    // Corner handles
+    [x1, x1+bw].forEach(hx => [y1, y1+bh].forEach(hy => {
+      ctx.fillStyle = '#FFD700';
+      ctx.fillRect(hx - 4, hy - 4, 8, 8);
+    }));
+  }
+}
+
+function drawStar(ctx, x, y, selected) {
+  ctx.shadowColor  = selected ? '#FFD700' : '#FFA500';
+  ctx.shadowBlur   = selected ? 18 : 10;
+  ctx.font         = '22px Arial';
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('⭐', x, y);
+  ctx.shadowBlur   = 0;
+  if (selected) {
+    ctx.strokeStyle = '#FFD700';
+    ctx.lineWidth   = 2;
+    ctx.beginPath(); ctx.arc(x, y, 16, 0, Math.PI*2); ctx.stroke();
+  }
+}
+
+function drawNpcEditor(ctx, n, selected) {
+  // Patrol path line
+  ctx.strokeStyle = selected ? 'rgba(255,215,0,0.6)' : 'rgba(255,255,255,0.25)';
+  ctx.lineWidth   = 2;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n.ex, n.ey); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Start circle (NPC)
+  ctx.shadowColor = selected ? '#FFD700' : n.color;
+  ctx.shadowBlur  = selected ? 16 : 8;
+  ctx.fillStyle   = n.color;
+  ctx.beginPath(); ctx.arc(n.x, n.y, selected ? 20 : 17, 0, Math.PI*2); ctx.fill();
+  ctx.shadowBlur  = 0;
+  ctx.strokeStyle = selected ? '#FFD700' : 'rgba(255,255,255,0.4)';
+  ctx.lineWidth   = selected ? 3 : 1.5;
+  ctx.stroke();
+
+  ctx.font         = '14px Arial';
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(n.emoji, n.x, n.y + 1);
+
+  // End dot
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.beginPath(); ctx.arc(n.ex, n.ey, 6, 0, Math.PI*2); ctx.fill();
+
+  // Speed label
+  ctx.fillStyle    = 'rgba(255,255,255,0.6)';
+  ctx.font         = '10px Arial';
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText(`spd ${n.speed.toFixed(1)}`, n.x, n.y - 22);
+}
+
+function drawPlayerStart(ctx, ps) {
+  ctx.shadowColor = '#00FF88';
+  ctx.shadowBlur  = 16;
+  ctx.fillStyle   = '#00FF88';
+  ctx.beginPath(); ctx.arc(ps.x, ps.y, 16, 0, Math.PI*2); ctx.fill();
+  ctx.shadowBlur  = 0;
+  ctx.strokeStyle = '#FFFFFF';
+  ctx.lineWidth   = 2;
+  ctx.stroke();
+  ctx.font         = '16px Arial';
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🎮', ps.x, ps.y + 1);
+
+  // Label
+  ctx.fillStyle    = 'rgba(255,255,255,0.6)';
+  ctx.font         = '10px Arial';
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText('START', ps.x, ps.y - 18);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PROPERTIES PANEL
+═══════════════════════════════════════════════════════════════════════════ */
+function updatePropsPanel() {
+  const panel  = document.getElementById('gm-props-content');
+  const t      = editorState.tool;
+  const selId  = editorState.selectedId;
+
+  // Find selected object
+  let selObj  = null;
+  let selType = null;
+  if (selId !== null) {
+    for (const b of level.barriers) if (b.id === selId) { selObj = b; selType = 'barrier'; }
+    for (const s of level.stars)    if (s.id === selId) { selObj = s; selType = 'star'; }
+    for (const n of level.npcs)     if (n.id === selId) { selObj = n; selType = 'npc'; }
+  }
+
+  if (t === 'wall') {
+    panel.innerHTML = wallPropsHTML();
+    bindWallProps(null);
+
+  } else if (t === 'npc' && editorState.npcPhase === 0) {
+    panel.innerHTML = npcPropsHTML(null);
+    bindNpcProps(null);
+
+  } else if (t === 'npc' && editorState.npcPhase === 1) {
+    panel.innerHTML = `<p style="color:#FFD700;font-size:0.82rem;">Click the canvas to set the patrol endpoint for the NPC.</p>` + npcPropsHTML(null);
+    bindNpcProps(null);
+
+  } else if (selObj && selType === 'barrier') {
+    panel.innerHTML = wallPropsHTML(selObj);
+    bindWallProps(selObj);
+
+  } else if (selObj && selType === 'npc') {
+    panel.innerHTML = npcPropsHTML(selObj);
+    bindNpcProps(selObj);
+
+  } else if (selObj && selType === 'star') {
+    panel.innerHTML = `<p style="color:#FFD700;">⭐ Star</p><button class="gm-delete-btn" id="pp-del">🗑 Delete Star</button>`;
+    document.getElementById('pp-del').onclick = () => {
+      level.stars = level.stars.filter(s => s.id !== selObj.id);
+      editorState.selectedId = null;
+      saveHistory(); renderEditor(); updatePropsPanel();
+    };
+
+  } else {
+    panel.innerHTML = `<p style="color:#666;font-size:0.82rem;">Select an object or choose a tool to see options.</p>`;
+  }
+}
+
+function wallPropsHTML(b) {
+  const c = b ? b.col : editorState.wallColor;
+  const l = b ? (b.label||'') : (editorState.wallLabel||'');
+  return `
+    <div class="gm-prop-row"><label>Wall Color</label>
+      <input type="color" id="pp-wc" value="${c}"></div>
+    <div class="gm-prop-row"><label>Label / Arrow</label>
+      <select id="pp-wl">
+        <option value="">— none —</option>
+        <option value="→">→ go right</option>
+        <option value="←">← go left</option>
+        <option value="↑">↑ go up</option>
+        <option value="↓">↓ go down</option>
+        <option value="⭐">⭐ star here</option>
+      </select></div>
+    ${b ? `<button class="gm-delete-btn" id="pp-del">🗑 Delete Wall</button>` : ''}
+  `;
+}
+
+function bindWallProps(b) {
+  const wc = document.getElementById('pp-wc');
+  const wl = document.getElementById('pp-wl');
+  if (!wc) return;
+  if (b) wl.value = b.label || '';
+  else   wl.value = editorState.wallLabel || '';
+
+  wc.addEventListener('input', () => {
+    editorState.wallColor = wc.value;
+    if (b) { b.col = wc.value; renderEditor(); }
+  });
+  wl.addEventListener('change', () => {
+    editorState.wallLabel = wl.value;
+    if (b) { b.label = wl.value; saveHistory(); renderEditor(); }
+  });
+  const del = document.getElementById('pp-del');
+  if (del) del.onclick = () => {
+    level.barriers = level.barriers.filter(x => x.id !== b.id);
+    editorState.selectedId = null;
+    saveHistory(); renderEditor(); updatePropsPanel();
+  };
+}
+
+function npcPropsHTML(n) {
+  const c  = n ? n.color : editorState.npcColor;
+  const em = n ? n.emoji : editorState.npcEmoji;
+  const sp = n ? n.speed : editorState.npcSpeed;
+  const emojiBtns = NPC_EMOJIS.map(e =>
+    `<button class="gm-emoji-btn ${e === em ? 'active' : ''}" data-e="${e}">${e}</button>`
+  ).join('');
+  return `
+    <div class="gm-prop-row"><label>NPC Color</label>
+      <input type="color" id="pp-nc" value="${c}"></div>
+    <div class="gm-prop-row"><label>Emoji Face</label>
+      <div class="emoji-grid">${emojiBtns}</div></div>
+    <div class="gm-prop-row"><label>Speed <span class="range-val" id="pp-sv">${sp.toFixed(1)}</span></label>
+      <input type="range" id="pp-ns" min="0.3" max="3.5" step="0.1" value="${sp}"></div>
+    ${n ? `<button class="gm-delete-btn" id="pp-del">🗑 Delete NPC</button>` : ''}
+  `;
+}
+
+function bindNpcProps(n) {
+  const nc = document.getElementById('pp-nc');
+  const ns = document.getElementById('pp-ns');
+  const sv = document.getElementById('pp-sv');
+  if (!nc) return;
+
+  nc.addEventListener('input', () => {
+    editorState.npcColor = nc.value;
+    if (n) { n.color = nc.value; renderEditor(); }
+  });
+  ns.addEventListener('input', () => {
+    const v = parseFloat(ns.value);
+    editorState.npcSpeed = v;
+    if (sv) sv.textContent = v.toFixed(1);
+    if (n) { n.speed = v; renderEditor(); }
+  });
+  document.querySelectorAll('.gm-emoji-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.gm-emoji-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      editorState.npcEmoji = btn.dataset.e;
+      if (n) { n.emoji = btn.dataset.e; renderEditor(); }
+      if (editorState.pendingNpc) editorState.pendingNpc.emoji = btn.dataset.e;
+    };
+  });
+  const del = document.getElementById('pp-del');
+  if (del) del.onclick = () => {
+    level.npcs = level.npcs.filter(x => x.id !== n.id);
+    editorState.selectedId = null;
+    saveHistory(); renderEditor(); updatePropsPanel();
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PLAY ENGINE
+═══════════════════════════════════════════════════════════════════════════ */
+const pCanvas = document.getElementById('gm-play-canvas');
+const pCtx    = pCanvas.getContext('2d');
+
+let playState   = null;   // active game state; null = not running
+let playRAF     = null;
+
+function buildPlayState() {
+  const lv = JSON.parse(JSON.stringify(level));
+  const totalStars = lv.stars.length;
+  if (totalStars === 0) {
+    alert('⭐ Add at least one star before playing!');
+    return null;
+  }
+  return {
+    player: {
+      x:     lv.playerStart.x - 20,
+      y:     lv.playerStart.y - 20,
+      size:  a11y.largeSprites ? 52 : 40,
+      speed: 3.2,
+      vx: 0, vy: 0,
+    },
+    barriers:    lv.barriers,
+    stars:       lv.stars.map(s => ({ ...s, collected: false })),
+    npcs:        lv.npcs.map(n => ({
+      ...n,
+      cx: n.x, cy: n.y,
+      size: 36,
+      pathIdx: 0,
+      path: [{ x: n.x, y: n.y }, { x: n.ex, y: n.ey }],
+    })),
+    totalStars,
+    score:       0,
+    won:         false,
+    hitFlash:    0,
+    particles:   [],
+    scorePops:   [],
+    sbDir:       0,
+    sbMoving:    false,
+    keys:        {},
+  };
+}
+
+function startPlay() {
+  if (playRAF) cancelAnimationFrame(playRAF);
+  playState = buildPlayState();
+  if (!playState) return false;
+  playState.keys = playKeys;
+  playLoop();
+  return true;
+}
+
+/* Separate key map for play mode */
+const playKeys = {};
+document.addEventListener('keydown', e => {
+  playKeys[e.key] = true;
+  if (playState) {
+    if (e.key === ' ' && a11y.singleButton) {
+      playState.sbDir = (playState.sbDir + 1) % 4;
+      e.preventDefault();
+    }
+    if (e.key === 'Enter' && a11y.singleButton) {
+      playState.sbMoving = true;
+      e.preventDefault();
+    }
+    if ((e.key === 'r' || e.key === 'R') && playState.won) {
+      playState = buildPlayState();
+      playState.keys = playKeys;
+    }
+  }
+});
+document.addEventListener('keyup', e => {
+  delete playKeys[e.key];
+  if (playState && e.key === 'Enter') playState.sbMoving = false;
+});
+
+/* ── Audio ─────────────────────────────────────────────────────────────── */
+let audioCtxPlay = null;
+function getAC() {
+  if (!audioCtxPlay) audioCtxPlay = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtxPlay;
+}
+function playTone(freq, dur, type = 'sine', vol = 0.25) {
+  if (!a11y.audioEnabled) return;
+  try {
+    const ac  = getAC();
+    const osc = ac.createOscillator();
+    const g   = ac.createGain();
+    osc.connect(g); g.connect(ac.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ac.currentTime);
+    g.gain.setValueAtTime(vol, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+    osc.start(); osc.stop(ac.currentTime + dur);
+  } catch(e) {}
+}
+function sfxCollect() {
+  playTone(660, 0.08);
+  setTimeout(() => playTone(880, 0.10), 80);
+  setTimeout(() => playTone(1100, 0.10), 160);
+}
+function sfxHit()  { playTone(180, 0.35, 'sawtooth', 0.18); }
+function sfxWin()  { [523,659,784,1047].forEach((f,i) => setTimeout(() => playTone(f,0.35),i*160)); }
+
+/* ── Physics helpers ───────────────────────────────────────────────────── */
+function rectOverlap(ax,ay,aw,ah, bx,by,bw,bh) {
+  return ax < bx+bw && ax+aw > bx && ay < by+bh && ay+ah > by;
+}
+function resolveBarriers(ps, barriers) {
+  const sz = ps.size;
+  for (const b of barriers) {
+    const bx = Math.min(b.x, b.x+b.w), by = Math.min(b.y, b.y+b.h);
+    const bw = Math.abs(b.w),           bh = Math.abs(b.h);
+    if (!rectOverlap(ps.x,ps.y,sz,sz, bx,by,bw,bh)) continue;
+    const oL = ps.x+sz-bx,  oR = bx+bw-ps.x;
+    const oT = ps.y+sz-by,  oB = by+bh-ps.y;
+    const m  = Math.min(oL,oR,oT,oB);
+    if      (m===oL) ps.x = bx-sz;
+    else if (m===oR) ps.x = bx+bw;
+    else if (m===oT) ps.y = by-sz;
+    else             ps.y = by+bh;
+  }
+  // Border walls
+  ps.x = Math.max(BORDER, Math.min(W-BORDER-ps.size, ps.x));
+  ps.y = Math.max(BORDER, Math.min(H-BORDER-ps.size, ps.y));
+}
+function spawnParticles(state, cx, cy) {
+  if (!a11y.celebrations || a11y.reduceMotion) return;
+  const cols = ['#FFD700','#FF6B6B','#00FF88','#00BFFF','#FF69B4'];
+  for (let i = 0; i < 18; i++) {
+    const a = Math.random()*Math.PI*2, spd = 2+Math.random()*4;
+    state.particles.push({
+      x:cx, y:cy, vx:Math.cos(a)*spd, vy:Math.sin(a)*spd,
+      life:1, decay:0.025+Math.random()*0.02,
+      r:4+Math.random()*5, col:cols[Math.floor(Math.random()*cols.length)],
+    });
+  }
+}
+function nearestStar(state) {
+  const ps = state.player;
+  const pcx = ps.x + ps.size/2, pcy = ps.y + ps.size/2;
+  let best=null, bestD=Infinity;
+  for (const s of state.stars) {
+    if (s.collected) continue;
+    const d = Math.hypot(s.x-pcx, s.y-pcy);
+    if (d<bestD) { bestD=d; best=s; }
+  }
+  return best;
+}
+
+/* ── Update ─────────────────────────────────────────────────────────────── */
+function updatePlay(st) {
+  if (st.won) return;
+  const scale = a11y.slowMode ? 0.45 : 1;
+  const spd   = st.player.speed * scale;
+  const ps    = st.player;
+
+  ps.vx = 0; ps.vy = 0;
+  if (a11y.singleButton) {
+    if (st.sbMoving) {
+      if (st.sbDir===0) ps.vx =  spd;
+      if (st.sbDir===1) ps.vy =  spd;
+      if (st.sbDir===2) ps.vx = -spd;
+      if (st.sbDir===3) ps.vy = -spd;
+    }
+  } else {
+    if (st.keys['ArrowLeft']  || st.keys['a'] || st.keys['A']) ps.vx -= spd;
+    if (st.keys['ArrowRight'] || st.keys['d'] || st.keys['D']) ps.vx += spd;
+    if (st.keys['ArrowUp']    || st.keys['w'] || st.keys['W']) ps.vy -= spd;
+    if (st.keys['ArrowDown']  || st.keys['s'] || st.keys['S']) ps.vy += spd;
+  }
+
+  ps.x += ps.vx; ps.y += ps.vy;
+  // Border walls count as barriers
+  const borderWalls = [
+    {x:0,y:0,w:W,h:BORDER},
+    {x:0,y:H-BORDER,w:W,h:BORDER},
+    {x:0,y:0,w:BORDER,h:H},
+    {x:W-BORDER,y:0,w:BORDER,h:H},
+  ];
+  resolveBarriers(ps, [...st.barriers, ...borderWalls]);
+
+  // NPCs
+  for (const n of st.npcs) {
+    const tgt  = n.path[n.pathIdx];
+    const dx   = tgt.x - n.cx, dy = tgt.y - n.cy;
+    const dist = Math.hypot(dx,dy);
+    const ns   = (n.speed || 1.2) * scale;
+    if (dist < 3) {
+      n.pathIdx = (n.pathIdx+1) % n.path.length;
+    } else {
+      n.cx += (dx/dist)*ns;
+      n.cy += (dy/dist)*ns;
+    }
+
+    if (!a11y.guidedMode) {
+      const pcx = ps.x+ps.size/2, pcy = ps.y+ps.size/2;
+      const ncx = n.cx+n.size/2,  ncy = n.cy+n.size/2;
+      if (Math.abs(pcx-ncx)<(ps.size+n.size)/2 && Math.abs(pcy-ncy)<(ps.size+n.size)/2) {
+        sfxHit();
+        st.hitFlash = a11y.reduceMotion ? 1 : 28;
+        ps.x = level.playerStart.x - 20;
+        ps.y = level.playerStart.y - 20;
+      }
+    }
+  }
+
+  // Stars
+  const pcx = ps.x+ps.size/2, pcy = ps.y+ps.size/2;
+  for (const s of st.stars) {
+    if (s.collected) continue;
+    if (Math.hypot(s.x-pcx, s.y-pcy) < ps.size*0.7) {
+      s.collected = true;
+      st.score++;
+      sfxCollect();
+      spawnParticles(st, s.x, s.y);
+      st.scorePops.push({ x:s.x, y:s.y-10, alpha:1, dy:-1.2, text:'+1 ⭐' });
+      if (st.score >= st.totalStars) {
+        st.won = true;
+        sfxWin();
+        spawnParticles(st, pcx, pcy);
+      }
+    }
+  }
+
+  // Particles
+  for (let i=st.particles.length-1;i>=0;i--) {
+    const p=st.particles[i];
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.08;
+    p.life -= p.decay;
+    if (p.life<=0) st.particles.splice(i,1);
+  }
+  // Score pops
+  for (let i=st.scorePops.length-1;i>=0;i--) {
+    const sp=st.scorePops[i];
+    sp.y+=sp.dy; sp.alpha-=0.025;
+    if (sp.alpha<=0) st.scorePops.splice(i,1);
+  }
+  if (st.hitFlash>0) st.hitFlash--;
+}
+
+/* ── Render Play ────────────────────────────────────────────────────────── */
+function drawPlay(st) {
+  const ctx = pCtx;
+  const HC  = a11y.highContrast;
+  const LG  = a11y.largeSprites;
+  const ps  = st.player;
+
+  ctx.fillStyle = HC ? '#000' : '#0d0d1a';
+  ctx.fillRect(0,0,W,H);
+
+  if (!HC && !a11y.reduceMotion) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+    ctx.lineWidth = 1;
+    for (let gx=0;gx<=W;gx+=40) {ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
+    for (let gy=0;gy<=H;gy+=40) {ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
+  }
+
+  // Border walls
+  ctx.fillStyle = HC ? '#FFF' : '#223366';
+  ctx.fillRect(0,0,W,BORDER);
+  ctx.fillRect(0,H-BORDER,W,BORDER);
+  ctx.fillRect(0,0,BORDER,H);
+  ctx.fillRect(W-BORDER,0,BORDER,H);
+
+  // Barriers
+  for (const b of st.barriers) {
+    const bx=Math.min(b.x,b.x+b.w), by=Math.min(b.y,b.y+b.h);
+    const bw=Math.abs(b.w), bh=Math.abs(b.h);
+    ctx.fillStyle   = HC ? '#FFF' : (b.col||'#223366');
+    ctx.fillRect(bx,by,bw,bh);
+    if (b.label) {
+      ctx.strokeStyle = HC ? '#FFFF00' : '#FF9900';
+      ctx.lineWidth   = 2;
+      ctx.strokeRect(bx,by,bw,bh);
+      if (bw>30 && bh>14) {
+        ctx.fillStyle    = HC ? '#000' : '#FFF';
+        ctx.font         = `bold ${LG?16:13}px Arial`;
+        ctx.textAlign    = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(b.label, bx+bw/2, by+bh/2);
+      }
+    }
+  }
+
+  // Stars
+  const near = a11y.guidedMode ? nearestStar(st) : null;
+  for (const s of st.stars) {
+    if (s.collected) continue;
+    const sz = LG ? 30 : 22;
+    if (HC) {
+      ctx.fillStyle = '#FFFF00';
+      ctx.beginPath(); ctx.arc(s.x,s.y,sz/2+2,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#000';
+      ctx.font = `${sz}px Arial`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('★',s.x,s.y+1);
+    } else {
+      ctx.shadowColor='#FFD700'; ctx.shadowBlur=a11y.reduceMotion?0:10;
+      ctx.font=`${sz}px Arial`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('⭐',s.x,s.y);
+      ctx.shadowBlur=0;
+    }
+    if (near === s) drawGuide(ctx, ps, s);
+  }
+  ctx.shadowBlur=0;
+
+  // Particles
+  for (const p of st.particles) {
+    ctx.globalAlpha=p.life;
+    ctx.fillStyle=p.col;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+  }
+  ctx.globalAlpha=1;
+
+  // NPCs
+  const npcSz = LG ? 48 : 36;
+  for (const n of st.npcs) {
+    const cx=n.cx+n.size/2, cy=n.cy+n.size/2;
+    if (HC) {
+      ctx.fillStyle = a11y.guidedMode ? '#00AAFF' : '#FF0000';
+      ctx.beginPath(); ctx.arc(cx,cy,npcSz/2,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='#FFF'; ctx.lineWidth=3; ctx.stroke();
+    } else {
+      ctx.shadowColor = a11y.guidedMode ? '#00AAFF' : n.color;
+      ctx.shadowBlur  = a11y.reduceMotion ? 0 : 14;
+      ctx.fillStyle   = a11y.guidedMode ? '#0077cc' : n.color;
+      ctx.beginPath(); ctx.arc(cx,cy,npcSz/2,0,Math.PI*2); ctx.fill();
+      ctx.shadowBlur=0;
+    }
+    ctx.font=`${Math.floor(npcSz*0.55)}px Arial`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(a11y.guidedMode ? '😊' : n.emoji, cx, cy+1);
+  }
+
+  // Player
+  const pcx=ps.x+ps.size/2, pcy=ps.y+ps.size/2;
+  if (HC) {
+    ctx.fillStyle='#FFFF00';
+    ctx.beginPath(); ctx.arc(pcx,pcy,ps.size/2,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#FFF'; ctx.lineWidth=3; ctx.stroke();
+  } else {
+    ctx.shadowColor='#00FF88'; ctx.shadowBlur=a11y.reduceMotion?0:18;
+    ctx.fillStyle='#00FF88';
+    ctx.beginPath(); ctx.arc(pcx,pcy,ps.size/2,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0;
+  }
+  ctx.font=`${Math.floor(ps.size*0.55)}px Arial`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('🎮',pcx,pcy+1);
+  ctx.shadowBlur=0;
+
+  // HUD
+  ctx.fillStyle = HC ? '#FFFFFF' : '#DDDDDD';
+  ctx.font = `bold ${LG?22:18}px Arial`;
+  ctx.textAlign='left'; ctx.textBaseline='top';
+  ctx.fillText(`⭐ ${st.score} / ${st.totalStars}`, 32, 30);
+
+  let by2=56;
+  const bf=`${LG?14:12}px Arial`;
+  if (a11y.slowMode)     { drawPlayBadge(ctx,'🐌 SLOW',    32,by2,'#006666',bf); by2+=22; }
+  if (a11y.guidedMode)   { drawPlayBadge(ctx,'🧭 GUIDED',  32,by2,'#005500',bf); by2+=22; }
+  if (a11y.singleButton) {
+    const dirs=['→ RIGHT','↓ DOWN','← LEFT','↑ UP'];
+    drawPlayBadge(ctx,`🕹️ ${dirs[st.sbDir]}`,32,by2,'#330066',bf); by2+=22;
+  }
+
+  // Score pops
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  for (const sp of st.scorePops) {
+    ctx.globalAlpha=sp.alpha;
+    ctx.font=`bold ${LG?20:16}px Arial`;
+    ctx.fillStyle='#FFD700';
+    ctx.fillText(sp.text,sp.x,sp.y);
+  }
+  ctx.globalAlpha=1;
+
+  // Hit flash
+  if (st.hitFlash>0) {
+    ctx.fillStyle=`rgba(255,0,0,${st.hitFlash/35*0.55})`;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  // Win overlay
+  if (st.won) {
+    ctx.fillStyle='rgba(0,0,0,0.72)';
+    ctx.fillRect(0,0,W,H);
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.font=`bold ${LG?58:48}px Arial`;
+    ctx.fillStyle='#FFD700';
+    ctx.shadowColor='#FFD700'; ctx.shadowBlur=a11y.reduceMotion?0:24;
+    ctx.fillText('🎉  YOU WIN!  🎉',W/2,H/2-48);
+    ctx.shadowBlur=0;
+    ctx.font=`${LG?26:22}px Arial`;
+    ctx.fillStyle='#FFF';
+    ctx.fillText(`Stars: ${st.score} / ${st.totalStars}`,W/2,H/2+10);
+    ctx.font=`${LG?18:15}px Arial`;
+    ctx.fillStyle='#AAA';
+    ctx.fillText('Press R to play again',W/2,H/2+48);
+  }
+}
+
+function drawGuide(ctx, ps, star) {
+  const pcx=ps.x+ps.size/2, pcy=ps.y+ps.size/2;
+  const ang=Math.atan2(star.y-pcy, star.x-pcx);
+  const sd=ps.size*0.65;
+  const len=Math.max(0,Math.hypot(star.x-pcx,star.y-pcy)-ps.size-10);
+  if (len<12) return;
+  const al=Math.min(len,55);
+  const sx2=pcx+Math.cos(ang)*sd, sy2=pcy+Math.sin(ang)*sd;
+  const ex=sx2+Math.cos(ang)*al,  ey=sy2+Math.sin(ang)*al;
+  ctx.save();
+  ctx.strokeStyle=a11y.highContrast?'#FFF':'#88FF88';
+  ctx.lineWidth=3; ctx.setLineDash([6,4]);
+  ctx.beginPath(); ctx.moveTo(sx2,sy2); ctx.lineTo(ex,ey); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle=a11y.highContrast?'#FFF':'#88FF88';
+  ctx.beginPath();
+  ctx.moveTo(ex,ey);
+  ctx.lineTo(ex-10*Math.cos(ang-0.45),ey-10*Math.sin(ang-0.45));
+  ctx.lineTo(ex-10*Math.cos(ang+0.45),ey-10*Math.sin(ang+0.45));
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+function drawPlayBadge(ctx,text,x,y,bg,font) {
+  ctx.font=font; ctx.textAlign='left'; ctx.textBaseline='top';
+  const tw=ctx.measureText(text).width;
+  ctx.fillStyle=bg;
+  ctx.beginPath();
+  ctx.roundRect(x-4,y-2,tw+12,18,6);
+  ctx.fill();
+  ctx.fillStyle='#FFF';
+  ctx.fillText(text,x+2,y+1);
+}
+
+function playLoop() {
+  if (!playState) return;
+  updatePlay(playState);
+  drawPlay(playState);
+  playRAF = requestAnimationFrame(playLoop);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SAVE / LOAD (localStorage)
+═══════════════════════════════════════════════════════════════════════════ */
+const SAVE_KEY = 'uesl_gm_level_v1';
+
+function saveLevel() {
+  localStorage.setItem(SAVE_KEY, JSON.stringify({ level, nextId }));
+  setStatus('💾 Level saved!');
+}
+
+function loadLevel() {
+  const raw = localStorage.getItem(SAVE_KEY);
+  if (!raw) { setStatus('📂 No saved level found.'); return; }
+  try {
+    const data = JSON.parse(raw);
+    level  = data.level;
+    nextId = data.nextId || nextId;
+    saveHistory();
+    renderEditor();
+    setStatus('📂 Level loaded!');
+  } catch(e) {
+    setStatus('❌ Could not load level.');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UI WIRING
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* Tabs */
+document.querySelectorAll('.gm-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const mode = btn.dataset.mode;
+
+    // Validate before entering play
+    if (mode === 'play') {
+      if (level.stars.length === 0) {
+        alert('⭐ Add at least one star to your level before playing!');
+        return;
+      }
+      if (!startPlay()) return;
+    } else {
+      // Leaving play mode — stop loop
+      if (playRAF) { cancelAnimationFrame(playRAF); playRAF = null; }
+    }
+
+    document.querySelectorAll('.gm-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.gm-mode').forEach(p => p.classList.remove('active'));
+    document.getElementById(`gm-mode-${mode}`).classList.add('active');
+
+    if (mode === 'design') renderEditor();
+  });
+});
+
+/* Back button */
+document.getElementById('gm-back-btn').addEventListener('click', () => {
+  if (playRAF) { cancelAnimationFrame(playRAF); playRAF = null; }
+  document.querySelectorAll('.gm-tab').forEach(b => b.classList.remove('active'));
+  document.querySelector('.gm-tab[data-mode="design"]').classList.add('active');
+  document.querySelectorAll('.gm-mode').forEach(p => p.classList.remove('active'));
+  document.getElementById('gm-mode-design').classList.add('active');
+  renderEditor();
+});
+
+/* Tool buttons */
+document.querySelectorAll('.gm-tool-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    editorState.tool     = btn.dataset.tool;
+    editorState.npcPhase = 0;
+    editorState.pendingNpc = null;
+    editorState.selectedId = null;
+    document.querySelectorAll('.gm-tool-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    updatePropsPanel();
+    setStatus({
+      select: '🖱️ Click an object to select and move it.',
+      player: '🎮 Click anywhere to set the player start position.',
+      wall:   '🧱 Click and drag to draw a wall.',
+      star:   '⭐ Click anywhere to place a star.',
+      npc:    '👾 Click to place an NPC, then click its patrol endpoint.',
+      erase:  '🗑️ Click any object to delete it.',
+    }[editorState.tool] || '');
+    renderEditor();
+  });
+});
+
+/* Action buttons */
+document.getElementById('gm-undo-btn').addEventListener('click', undo);
+document.getElementById('gm-redo-btn').addEventListener('click', redo);
+document.getElementById('gm-clear-btn').addEventListener('click', () => {
+  if (!confirm('Clear the entire level?')) return;
+  level = emptyLevel();
+  editorState.selectedId = null;
+  editorState.npcPhase   = 0;
+  editorState.pendingNpc = null;
+  saveHistory();
+  renderEditor();
+  updatePropsPanel();
+  setStatus('🗑️ Level cleared.');
+});
+document.getElementById('gm-save-btn').addEventListener('click', saveLevel);
+document.getElementById('gm-load-btn').addEventListener('click', loadLevel);
+document.getElementById('gm-play-btn').addEventListener('click', () => {
+  if (level.stars.length === 0) { alert('⭐ Add at least one star before playing!'); return; }
+  if (!startPlay()) return;
+  document.querySelectorAll('.gm-tab').forEach(b => b.classList.remove('active'));
+  document.querySelector('.gm-tab[data-mode="play"]').classList.add('active');
+  document.querySelectorAll('.gm-mode').forEach(p => p.classList.remove('active'));
+  document.getElementById('gm-mode-play').classList.add('active');
+});
+
+/* Settings toggles */
+[
+  ['gs-slow',      'slowMode'],
+  ['gs-single',    'singleButton'],
+  ['gs-contrast',  'highContrast'],
+  ['gs-large',     'largeSprites'],
+  ['gs-reduce',    'reduceMotion'],
+  ['gs-guided',    'guidedMode'],
+  ['gs-audio',     'audioEnabled'],
+  ['gs-celebrate', 'celebrations'],
+].forEach(([id, key]) => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.checked = a11y[key];
+    el.addEventListener('change', () => {
+      a11y[key] = el.checked;
+      if (playState) playState.player.size = a11y.largeSprites ? 52 : 40;
+    });
+  }
+});
+
+/* Resume AudioContext on first user interaction with play canvas */
+pCanvas.addEventListener('click', () => {
+  if (audioCtxPlay && audioCtxPlay.state === 'suspended') audioCtxPlay.resume();
+}, { once: true });
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BOOT
+═══════════════════════════════════════════════════════════════════════════ */
+// Starter level so kids see something right away
+function loadStarterLevel() {
+  level.barriers = [
+    { id:uid(), x:160, y:80,  w:22,  h:200, col:'#3355BB', label:'→' },
+    { id:uid(), x:380, y:200, w:200, h:22,  col:'#CC4400', label:'↓' },
+    { id:uid(), x:580, y:200, w:22,  h:180, col:'#3355BB', label:'↑' },
+  ];
+  level.stars = [
+    { id:uid(), x:100, y:240 },
+    { id:uid(), x:300, y:120 },
+    { id:uid(), x:650, y:350 },
+    { id:uid(), x:400, y:420 },
+  ];
+  level.npcs = [
+    { id:uid(), x:430, y:100, ex:430, ey:380, speed:1.2, color:'#FF4444', emoji:'👾' },
+  ];
+  level.playerStart = { x:60, y:60 };
+}
+
+loadStarterLevel();
+saveHistory();
+renderEditor();
+updatePropsPanel();
+setStatus('👋 Welcome! Try the tools on the left to build your level, then hit ▶ Play!');
+
+})();
+</script>
