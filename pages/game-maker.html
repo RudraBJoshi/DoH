@@ -370,6 +370,158 @@ permalink: /game-maker/
 .gm-overlay-btn.secondary:hover { background: #2a260a; }
 .gm-overlay-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 
+/* ─── D-Pad Controller ──────────────────────────────────────────────────── */
+#gm-dpad-bar {
+  margin-top: 10px;
+  padding: 14px 16px;
+  background: #141428;
+  border: 1px solid #333;
+  border-radius: 12px;
+}
+#gm-dpad-label {
+  font-size: 0.78rem;
+  color: #666;
+  text-align: center;
+  margin-bottom: 10px;
+  letter-spacing: 0.05em;
+}
+#gm-dpad-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+/* the 3×3 cross grid */
+#gm-dpad-cross {
+  display: grid;
+  grid-template-columns: repeat(3, 56px);
+  grid-template-rows: repeat(3, 56px);
+  gap: 4px;
+}
+.gm-dpad-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  border: 2px solid #444;
+  background: #1e1e2e;
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s, transform 0.08s, border-color 0.12s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.gm-dpad-btn:hover  { background: #2a2a4a; border-color: #888; }
+.gm-dpad-btn:active { background: #FFD700; color: #000; border-color: #FFD700; transform: scale(0.92); }
+.gm-dpad-btn.center { background: #0d0d1a; cursor: default; border-color: #222; }
+/* blocks selector */
+#gm-dpad-blocks-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+#gm-dpad-blocks-label {
+  font-size: 0.75rem;
+  color: #888;
+  text-align: center;
+}
+#gm-dpad-blocks-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.gm-dpad-count-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #444;
+  background: #1e1e2e;
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s;
+  line-height: 1;
+}
+.gm-dpad-count-btn:hover  { background: #2a2a4a; border-color: #888; }
+.gm-dpad-count-btn:active { background: #FFD700; color: #000; border-color: #FFD700; }
+#gm-dpad-count-display {
+  min-width: 42px;
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: #FFD700;
+}
+/* Voice Command Bar (kept as secondary) */
+#gm-voice-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  padding: 8px 16px;
+  background: #0d0d1a;
+  border: 1px solid #222;
+  border-radius: 12px;
+}
+#gm-voice-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border: 2px solid #333;
+  border-radius: 24px;
+  background: #1e1e2e;
+  color: #666;
+  font-size: 0.82rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+#gm-voice-btn:hover { border-color: #666; color: #aaa; }
+#gm-voice-btn.listening {
+  border-color: #FF4444;
+  color: #FF4444;
+  background: #2a1010;
+  animation: gm-mic-pulse 1.4s ease-in-out infinite;
+}
+#gm-voice-btn.unsupported { opacity: 0.4; cursor: not-allowed; }
+@keyframes gm-mic-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(255,68,68,0.5); }
+  50%      { box-shadow: 0 0 0 10px rgba(255,68,68,0); }
+}
+#gm-voice-status { font-size: 0.78rem; color: #555; flex: 1; min-width: 100px; }
+#gm-voice-bubble {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  background: #1e1e2e;
+  border: 1px solid #555;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 0.82rem;
+  color: #fff;
+  max-width: 260px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#gm-voice-bubble.show { display: flex; }
+#gm-voice-bubble .vb-ok  { color: #00FF88; font-weight: bold; }
+#gm-voice-bubble .vb-err { color: #FF8888; }
+#gm-voice-examples { width: 100%; font-size: 0.72rem; color: #444; margin-top: 2px; display: none; }
+#gm-voice-examples.show { display: block; }
+#gm-voice-examples b { color: #666; }
+
 #gm-play-controls-hint {
   margin-top: 8px;
   font-size: 0.78rem;
@@ -550,6 +702,49 @@ permalink: /game-maker/
       <span>ENTER</span> move (single-button) &nbsp;|&nbsp;
       <span>R</span> restart level
     </div>
+
+    <!-- D-Pad Controller -->
+    <div id="gm-dpad-bar">
+      <div id="gm-dpad-label">🕹️ TAP TO MOVE</div>
+      <div id="gm-dpad-inner">
+        <!-- 3×3 cross -->
+        <div id="gm-dpad-cross">
+          <div></div>
+          <button class="gm-dpad-btn" data-dir="up"    title="Move Up">↑</button>
+          <div></div>
+          <button class="gm-dpad-btn" data-dir="left"  title="Move Left">←</button>
+          <div class="gm-dpad-btn center">🎮</div>
+          <button class="gm-dpad-btn" data-dir="right" title="Move Right">→</button>
+          <div></div>
+          <button class="gm-dpad-btn" data-dir="down"  title="Move Down">↓</button>
+          <div></div>
+        </div>
+        <!-- blocks selector -->
+        <div id="gm-dpad-blocks-wrap">
+          <div id="gm-dpad-blocks-label">BLOCKS</div>
+          <div id="gm-dpad-blocks-row">
+            <button class="gm-dpad-count-btn" id="gm-dpad-minus">−</button>
+            <div id="gm-dpad-count-display">3</div>
+            <button class="gm-dpad-count-btn" id="gm-dpad-plus">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Voice Command Bar (secondary / experimental) -->
+    <div id="gm-voice-bar">
+      <button id="gm-voice-btn" title="Toggle voice commands">
+        🎤 Voice: Off
+      </button>
+      <div id="gm-voice-status">Experimental — tap the D-pad above for reliable control</div>
+      <div id="gm-voice-bubble"></div>
+      <div id="gm-voice-examples">
+        <b>Try saying:</b>
+        "move right 5 blocks" &nbsp;·&nbsp; "go left 3" &nbsp;·&nbsp;
+        "up 2" &nbsp;·&nbsp; "down" &nbsp;·&nbsp;
+        "move forward 10" &nbsp;·&nbsp; "stop"
+      </div>
+    </div>
   </div>
 
   <!-- ══════════ SETTINGS MODE ══════════════════════════════════════════ -->
@@ -587,6 +782,13 @@ permalink: /game-maker/
   </div>
 
 </div><!-- #gm-app -->
+
+<script>
+// Redirect 127.0.0.1 → localhost so Chrome's Web Speech API works reliably
+if (location.hostname === '127.0.0.1') {
+  location.replace(location.href.replace('127.0.0.1', 'localhost'));
+}
+</script>
 
 <script>
 (function () {
@@ -1193,9 +1395,14 @@ function sfxLevelComplete() { [659,784,880,1047,880,1047,1319].forEach((f,i)=>se
 const pCanvas    = document.getElementById('gm-play-canvas');
 const pCtx       = pCanvas.getContext('2d');
 const playKeys   = {};
-let   playState  = null;
+let   playState    = null;
 let   playLevelIdx = 0;
-let   playRAF    = null;
+let   playRAF      = null;
+
+/* ── Voice command state ────────────────────────────────────────────────── */
+let voiceRecognition = null;   // SpeechRecognition instance
+let voiceListening   = false;  // is the mic currently open?
+let voiceBubbleTimer = null;   // timeout to hide the bubble
 
 /* ── Multi-level orchestration ─────────────────────────────────────────── */
 function startPlay() {
@@ -1367,6 +1574,19 @@ function updatePlay(st) {
     if(playKeys['ArrowDown'] ||playKeys['s']||playKeys['S'])ps.vy+=spd;
   }
 
+  // Voice move: if a voice command is queued, apply it and override keyboard input
+  if (st.voiceMove && st.voiceMove.remainingPx > 0 && !st.won) {
+    const vmSpd = ps.spd * (a11y.slowMode ? 0.45 : 1);
+    const step  = Math.min(st.voiceMove.remainingPx, vmSpd);
+    ps.vx = st.voiceMove.vx * step;
+    ps.vy = st.voiceMove.vy * step;
+    st.voiceMove.remainingPx -= step;
+    if (st.voiceMove.remainingPx <= 0) {
+      st.voiceMove = null;
+      ps.vx = 0; ps.vy = 0;
+    }
+  }
+
   ps.x+=ps.vx; ps.y+=ps.vy;
   resolveBarriers(ps,[...st.barriers,...BORDER_WALLS]);
 
@@ -1476,12 +1696,34 @@ function drawPlay(st) {
   ctx.font=`${Math.floor(ps.size*0.55)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
   ctx.fillText(game.playerEmoji,pcx,pcy+1);
   // Player name above character
+  const nameY = ps.y - 4;
   if (game.playerName) {
     ctx.fillStyle=HC?'#FFFF00':'rgba(255,255,255,0.8)';
     ctx.font=`bold ${LG?13:11}px Arial`;
     ctx.textAlign='center'; ctx.textBaseline='bottom';
-    ctx.fillText(game.playerName, pcx, ps.y-4);
+    ctx.fillText(game.playerName, pcx, nameY);
   }
+
+  // Voice move indicator — small speech bubble above player while executing a voice command
+  if (st.voiceMove && st.voiceMove.remainingPx > 0) {
+    const label  = st.voiceMove.label || '🎤';
+    const bubbleY = (game.playerName ? nameY : ps.y) - (LG ? 20 : 16);
+    ctx.font = `bold ${LG?13:11}px Arial`;
+    const tw = ctx.measureText(label).width;
+    const bx = pcx - tw/2 - 8, by = bubbleY - 16, bw = tw + 16, bh = 18;
+    ctx.fillStyle = 'rgba(0,180,255,0.9)';
+    ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 8); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, pcx, by + bh/2);
+    // Progress bar below bubble
+    const pct = 1 - st.voiceMove.remainingPx / st.voiceMove.totalPx;
+    ctx.fillStyle = 'rgba(0,100,180,0.5)';
+    ctx.beginPath(); ctx.roundRect(bx, by+bh+2, bw, 3, 2); ctx.fill();
+    ctx.fillStyle = '#00BFFF';
+    ctx.beginPath(); ctx.roundRect(bx, by+bh+2, bw*pct, 3, 2); ctx.fill();
+  }
+
   ctx.shadowBlur=0;
 
   // HUD — score + badges
@@ -1620,6 +1862,15 @@ document.querySelectorAll('.gm-tab').forEach(btn => {
 // Back to editor button
 function goBackToDesign() {
   if (playRAF) { cancelAnimationFrame(playRAF); playRAF=null; }
+  // Stop mic when leaving play mode
+  if (voiceListening && voiceRecognition) {
+    voiceListening = false;
+    voiceRecognition.stop();
+    const vb = document.getElementById('gm-voice-btn');
+    if (vb) { vb.textContent='🎤 Voice: Off'; vb.classList.remove('listening'); }
+    const ve = document.getElementById('gm-voice-examples');
+    if (ve) ve.classList.remove('show');
+  }
   hideAllOverlays();
   document.querySelectorAll('.gm-tab').forEach(b=>b.classList.remove('active'));
   document.querySelector('.gm-tab[data-mode="design"]').classList.add('active');
@@ -1695,6 +1946,283 @@ document.getElementById('gm-remove-level-btn').addEventListener('click', removeC
 pCanvas.addEventListener('click',()=>{ if(audioCtxP&&audioCtxP.state==='suspended') audioCtxP.resume(); },{once:true});
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   VOICE COMMANDS  (Web Speech API)
+
+   Supported phrases (any order, optional "move"/"go"/"walk" prefix):
+     "move right 5 blocks"   "go left three"   "up 2"
+     "down"  (defaults to 1 block)    "stop" / "halt"
+   Number words one–twenty are understood in addition to digits.
+═══════════════════════════════════════════════════════════════════════════ */
+
+const WORD_NUMS = {
+  one:1, two:2, three:3, four:4, five:5, six:6, seven:7,
+  eight:8, nine:9, ten:10, eleven:11, twelve:12, thirteen:13,
+  fourteen:14, fifteen:15, sixteen:16, seventeen:17, eighteen:18,
+  nineteen:19, twenty:20,
+};
+
+const DIR_MAP = {
+  right:    { vx:  1, vy:  0, label:'→ right' },
+  left:     { vx: -1, vy:  0, label:'← left'  },
+  up:       { vx:  0, vy: -1, label:'↑ up'    },
+  down:     { vx:  0, vy:  1, label:'↓ down'  },
+  forward:  { vx:  1, vy:  0, label:'→ forward'},
+  backward: { vx: -1, vy:  0, label:'← back'  },
+  back:     { vx: -1, vy:  0, label:'← back'  },
+};
+
+/**
+ * Parse a raw transcript string into a movement command object, or null.
+ * Returns: { vx, vy, blocks, label } | { stop: true } | null
+ */
+function parseVoiceCommand(text) {
+  const t = text.toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
+
+  // STOP command
+  if (/\b(stop|halt|freeze|stay|wait)\b/.test(t)) return { stop: true };
+
+  // Find direction
+  const dirRx = /\b(right|left|up|down|forward|backward|back)\b/;
+  const dirM  = t.match(dirRx);
+  if (!dirM) return null;
+
+  const dir = DIR_MAP[dirM[1]];
+  if (!dir) return null;
+
+  // Find number — prefer word-number, then digit
+  let blocks = 1;
+  const wordM  = t.match(/\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)\b/);
+  const digitM = t.match(/\b(\d+)\b/);
+  if      (wordM)  blocks = WORD_NUMS[wordM[1]];
+  else if (digitM) blocks = parseInt(digitM[1]);
+
+  blocks = Math.max(1, Math.min(20, blocks)); // clamp 1–20
+
+  return { vx: dir.vx, vy: dir.vy, blocks, label: `${dir.label} ×${blocks}` };
+}
+
+/** Show/update the voice bubble in the HTML bar */
+function showVoiceBubble(text, ok) {
+  const bubble = document.getElementById('gm-voice-bubble');
+  const cls    = ok ? 'vb-ok' : 'vb-err';
+  bubble.innerHTML = `<span class="${cls}">${ok ? '✔' : '✘'}</span> ${text}`;
+  bubble.classList.add('show');
+  // Bounce animation reset
+  bubble.style.animation = 'none';
+  requestAnimationFrame(() => { bubble.style.animation = ''; });
+  clearTimeout(voiceBubbleTimer);
+  voiceBubbleTimer = setTimeout(() => bubble.classList.remove('show'), 3500);
+}
+
+/** Set the status text in the voice bar */
+function setVoiceStatus(msg) {
+  const el = document.getElementById('gm-voice-status');
+  if (el) el.textContent = msg;
+}
+
+/**
+ * Handle a recognised transcript — parse and dispatch to the game.
+ */
+function handleVoiceTranscript(transcript) {
+  const cmd = parseVoiceCommand(transcript);
+
+  if (!cmd) {
+    // Didn't understand — show what we heard but don't crash
+    showVoiceBubble(`"${transcript}" — not understood`, false);
+    setVoiceStatus(`Heard: "${transcript}" — try "move right 3 blocks"`);
+    return;
+  }
+
+  if (cmd.stop) {
+    if (playState) playState.voiceMove = null;
+    showVoiceBubble('Stopped!', true);
+    setVoiceStatus('Stopped. Say a direction to move again.');
+    return;
+  }
+
+  // Queue the move on the active play state
+  if (playState && !playState.won && !playState.isEmpty) {
+    const totalPx = cmd.blocks * GRID;
+    playState.voiceMove = {
+      vx: cmd.vx,
+      vy: cmd.vy,
+      remainingPx: totalPx,
+      totalPx,
+      label: cmd.label,
+    };
+    showVoiceBubble(`${cmd.label}`, true);
+    setVoiceStatus(`Moving ${cmd.label}…`);
+  } else {
+    showVoiceBubble('Game not running — press ▶ Play first!', false);
+  }
+}
+
+/** D-Pad on-screen controller — reliable alternative to voice. */
+function initDpad() {
+  const DPAD_DIR = {
+    up:    { vx:  0, vy: -1, label: '↑ up'    },
+    down:  { vx:  0, vy:  1, label: '↓ down'  },
+    left:  { vx: -1, vy:  0, label: '← left'  },
+    right: { vx:  1, vy:  0, label: '→ right' },
+  };
+
+  let dpadBlocks = 3;
+
+  const countDisplay = document.getElementById('gm-dpad-count-display');
+
+  function updateCountDisplay() {
+    countDisplay.textContent = dpadBlocks;
+  }
+
+  document.getElementById('gm-dpad-plus').addEventListener('click', () => {
+    dpadBlocks = Math.min(20, dpadBlocks + 1);
+    updateCountDisplay();
+  });
+  document.getElementById('gm-dpad-minus').addEventListener('click', () => {
+    dpadBlocks = Math.max(1, dpadBlocks - 1);
+    updateCountDisplay();
+  });
+
+  document.querySelectorAll('.gm-dpad-btn[data-dir]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const dir = DPAD_DIR[btn.dataset.dir];
+      if (!dir) return;
+      if (!playState || playState.won || playState.isEmpty) return;
+      const totalPx = dpadBlocks * GRID;
+      playState.voiceMove = { vx: dir.vx, vy: dir.vy, remainingPx: totalPx, totalPx, label: dir.label };
+      showVoiceBubble(`${dir.label} ×${dpadBlocks}`, true);
+    });
+
+    // Touch: fire immediately on touchstart for snappier feel
+    btn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      btn.click();
+    }, { passive: false });
+  });
+}
+
+/** Initialise the SpeechRecognition engine and wire up the mic button. */
+function initVoice() {
+  const btn      = document.getElementById('gm-voice-btn');
+  const examples = document.getElementById('gm-voice-examples');
+  const SR       = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SR) {
+    btn.textContent = '🎤 Voice: Not Supported';
+    btn.classList.add('unsupported');
+    btn.title = 'Voice commands require Chrome or Edge browser.';
+    setVoiceStatus('Voice commands need Chrome or Edge. Use arrow keys instead.');
+    return;
+  }
+
+  let sessionRunning = false;  // guard: only one session alive at a time
+  let restartTimer   = null;
+
+  function buildSession() {
+    const rec = new SR();
+    rec.continuous      = false;   // one phrase per instance — reliable in Chrome
+    rec.interimResults  = true;    // live partial-result feedback
+    rec.lang            = 'en-US';
+    rec.maxAlternatives = 3;       // try up to 3 interpretations
+
+    rec.onstart = () => {
+      sessionRunning = true;
+      setVoiceStatus('Listening… say "move right 5 blocks"');
+    };
+
+    rec.onresult = (e) => {
+      try {
+        let interim = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          if (!e.results[i].isFinal) interim += e.results[i][0].transcript;
+        }
+        if (interim) setVoiceStatus('Hearing: ' + interim + '…');
+
+        const lastResult = e.results[e.results.length - 1];
+        if (lastResult && lastResult.isFinal) {
+          let bestTranscript = lastResult[0].transcript.trim();
+          for (let a = 0; a < lastResult.length; a++) {
+            const t = lastResult[a].transcript.trim();
+            if (parseVoiceCommand(t)) { bestTranscript = t; break; }
+          }
+          handleVoiceTranscript(bestTranscript);
+        }
+      } catch(err) {
+        setVoiceStatus('Voice error: ' + err.message);
+        console.error('Voice onresult error:', err);
+      }
+    };
+
+    rec.onerror = (e) => {
+      // NOTE: onerror is always followed by onend in Chrome — so we never
+      // call scheduleRestart() here; onend handles all restarts.
+      // This prevents the double-restart race that causes "aborted" errors.
+      sessionRunning = false;
+      if (e.error === 'not-allowed') {
+        setVoiceStatus('Microphone access denied. Allow it in your browser settings.');
+        stopListening();
+        return;
+      }
+      // no-speech and aborted are normal/transient — restart silently via onend
+      if (e.error === 'no-speech' || e.error === 'aborted') return;
+      // Other errors: show briefly but still recover via onend
+      setVoiceStatus('Mic issue (' + e.error + ') — retrying…');
+    };
+
+    rec.onend = () => {
+      sessionRunning = false;
+      if (!voiceListening) return;
+      setVoiceStatus('Restarting mic…');
+      // Sole place we schedule a restart — 300 ms gap prevents "aborted"
+      restartTimer = setTimeout(startSession, 300);
+    };
+
+    return rec;
+  }
+
+  function startSession() {
+    restartTimer = null;
+    if (!voiceListening || sessionRunning) return;   // already running — skip
+    try {
+      voiceRecognition = buildSession();
+      voiceRecognition.start();
+      setVoiceStatus('Starting mic…');
+    } catch(err) {
+      setVoiceStatus('Could not start microphone: ' + err.message);
+      stopListening();
+    }
+  }
+
+  function startListening() {
+    voiceListening = true;
+    btn.textContent = '🎤 Voice: ON (listening…)';
+    btn.classList.add('listening');
+    setVoiceStatus('Starting mic…');
+    examples.classList.add('show');
+    if (audioCtxP && audioCtxP.state === 'suspended') audioCtxP.resume();
+    startSession();
+  }
+
+  function stopListening() {
+    voiceListening  = false;
+    sessionRunning  = false;
+    if (restartTimer) { clearTimeout(restartTimer); restartTimer = null; }
+    if (voiceRecognition) { try { voiceRecognition.abort(); } catch(e) {} voiceRecognition = null; }
+    btn.textContent = '🎤 Voice: Off';
+    btn.classList.remove('listening');
+    setVoiceStatus('Voice off. Click the button to turn it back on.');
+    examples.classList.remove('show');
+    if (playState) playState.voiceMove = null;
+  }
+
+  // Mic button toggle
+  btn.addEventListener('click', () => {
+    if (btn.classList.contains('unsupported')) return;
+    if (voiceListening) stopListening(); else startListening();
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    BOOT — starter level so the canvas isn't empty
 ═══════════════════════════════════════════════════════════════════════════ */
 function loadStarterLevel() {
@@ -1722,6 +2250,8 @@ function loadStarterLevel() {
 
 loadStarterLevel();
 initGameInfoUI();
+initDpad();
+initVoice();
 saveHistory();
 updateLevelTabs();
 renderEditor();
