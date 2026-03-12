@@ -89,6 +89,18 @@ permalink: /game-maker/
   user-select: none;
 }
 #gi-emoji-btn:hover { border-color: #FFD700; }
+#gi-bg-select {
+  background: #1e1e2e;
+  border: 2px solid #444;
+  border-radius: 8px;
+  color: #FFD700;
+  font-size: 0.92rem;
+  font-weight: bold;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+#gi-bg-select:hover, #gi-bg-select:focus { border-color: #FFD700; outline: none; }
 #gi-emoji-popup {
   position: absolute;
   top: 50px;
@@ -552,6 +564,28 @@ permalink: /game-maker/
 .gm-tog input[type="checkbox"] { width:18px; height:18px; accent-color:#00FF88; cursor:pointer; margin-top:2px; flex-shrink:0; }
 .gm-tog .td { font-size:0.76rem; color:#777; display:block; margin-top:2px; }
 
+/* ─── Background Picker ─────────────────────────────────────────────────── */
+#gm-bg-picker { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.gm-bg-opt {
+  width: 88px; height: 54px;
+  border: 3px solid #444;
+  border-radius: 8px;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  transition: border-color 0.15s, transform 0.12s;
+}
+.gm-bg-opt:hover { border-color: #888; transform: scale(1.05); }
+.gm-bg-opt.active { border-color: #FFD700; box-shadow: 0 0 10px rgba(255,215,0,0.5); }
+.gm-bg-opt canvas { display: block; width: 100%; height: 100%; pointer-events: none; }
+.gm-bg-opt .gm-bg-label {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(0,0,0,0.7);
+  color: #fff; font-size: 0.62rem; font-weight: bold;
+  text-align: center; padding: 2px 4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
 /* Responsive */
 @media (max-width:720px) {
   #gm-design-layout { flex-direction: column; }
@@ -587,6 +621,17 @@ permalink: /game-maker/
         <div id="gi-emoji-popup" class="hidden"></div>
         <input id="gi-char-name" type="text" placeholder="Hero" maxlength="20" autocomplete="off">
       </div>
+    </div>
+    <div class="gi-section">
+      <label>🎨 Background</label>
+      <select id="gi-bg-select" title="Choose a background for your game">
+        <option value="dark">🌌 Dark Space</option>
+        <option value="alien">👽 Alien Planet</option>
+        <option value="sky">☁️ Sky Kingdom</option>
+        <option value="space">🚀 Deep Space</option>
+        <option value="sunset">🌅 Sunset</option>
+        <option value="ocean">🌊 Ocean Sky</option>
+      </select>
     </div>
     <div class="gi-section" style="margin-left:auto; font-size:0.78rem; color:#555; line-height:1.7;">
       Name your game &amp; character<br>— they'll show up when you play!
@@ -767,6 +812,10 @@ permalink: /game-maker/
           <span>🛑 Reduce Motion<span class="td">Removes particles and screen flash</span></span></label>
       </div>
       <div class="gm-set-sec">
+        <h3>🎨 Background</h3>
+        <div id="gm-bg-picker"></div>
+      </div>
+      <div class="gm-set-sec">
         <h3>🧭 Guidance</h3>
         <label class="gm-tog"><input type="checkbox" id="gs-guided">
           <span>🧭 Guided Mode<span class="td">Arrow points to nearest star; NPCs become friendly</span></span></label>
@@ -804,6 +853,171 @@ const BORDER = 22;
 
 const CHAR_EMOJIS = ['🎮','🦸','🐱','🐶','🐸','🦊','🐼','🤖','👑','🚀','🌟','🏆','🎯','🐉','🦁','🐯','🧙','🧚','🦋','🐥'];
 const NPC_EMOJIS  = ['👾','🤖','🦾','👻','🐲','🦊'];
+/* ─── Background Draw Functions ─────────────────────────────────────────── */
+function drawSpaceBg(ctx) {
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#000010'); grad.addColorStop(1, '#0a001a');
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+  const STARS = [
+    [45,30],[120,80],[200,45],[310,110],[420,70],[530,25],[660,90],[740,55],
+    [80,160],[190,200],[280,140],[390,180],[480,210],[600,170],[720,195],
+    [50,280],[150,320],[260,260],[370,300],[490,270],[610,310],[730,285],
+    [100,400],[220,440],[340,380],[460,430],[570,410],[680,450],[760,390],
+    [30,480],[140,500],[250,480],[360,510],[470,490],[590,505],[700,475],
+  ];
+  ctx.fillStyle = '#FFF';
+  for (const [sx,sy] of STARS) {
+    ctx.globalAlpha = 0.4 + ((sx+sy)%6)*0.1;
+    ctx.beginPath(); ctx.arc(sx, sy, 0.7+((sx*sy)%7)*0.2, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  const neb = ctx.createRadialGradient(W*0.7, H*0.3, 0, W*0.7, H*0.3, 180);
+  neb.addColorStop(0, 'rgba(80,0,120,0.18)'); neb.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = neb; ctx.fillRect(0, 0, W, H);
+}
+
+function drawSunsetBg(ctx) {
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#1a0533'); grad.addColorStop(0.38, '#8B1F5C');
+  grad.addColorStop(0.6, '#FF6B35'); grad.addColorStop(0.8, '#FFB347');
+  grad.addColorStop(1, '#2D1B00');
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+  const sun = ctx.createRadialGradient(W*0.5, H*0.58, 0, W*0.5, H*0.58, 70);
+  sun.addColorStop(0, '#FFFACC'); sun.addColorStop(0.4, '#FFD700');
+  sun.addColorStop(1, 'rgba(255,100,0,0)');
+  ctx.fillStyle = sun; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#110700';
+  ctx.beginPath(); ctx.moveTo(0, H);
+  ctx.quadraticCurveTo(W*0.15, H*0.7, W*0.35, H*0.78);
+  ctx.quadraticCurveTo(W*0.5, H*0.72, W*0.65, H*0.78);
+  ctx.quadraticCurveTo(W*0.82, H*0.86, W, H*0.74);
+  ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
+}
+
+function drawOceanBg(ctx) {
+  const sky = ctx.createLinearGradient(0, 0, 0, H*0.65);
+  sky.addColorStop(0, '#1a4a8a'); sky.addColorStop(1, '#87CEEB');
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H*0.65);
+  const sea = ctx.createLinearGradient(0, H*0.65, 0, H);
+  sea.addColorStop(0, '#1E90FF'); sea.addColorStop(1, '#00205a');
+  ctx.fillStyle = sea; ctx.fillRect(0, H*0.65, W, H*0.35);
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  [[130,70,60,24],[330,55,80,28],[570,80,55,22],[740,65,50,20]].forEach(([cx,cy,rx,ry])=>{
+    ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx-rx*0.45, cy+ry*0.3, rx*0.55, ry*0.7, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx+rx*0.45, cy+ry*0.3, rx*0.55, ry*0.7, 0, 0, Math.PI*2); ctx.fill();
+  });
+  ctx.fillStyle = 'rgba(255,255,255,0.15)'; ctx.fillRect(0, H*0.63, W, 4);
+}
+
+const BACKGROUNDS = [
+  { id: 'dark',   label: '🌌 Dark Space',  type: 'color', color: '#0d0d1a' },
+  { id: 'alien',  label: '👽 Alien Planet', type: 'image', src: '/images/gamebuilder/bg/alien_planet.jpg' },
+  { id: 'sky',    label: '☁️ Sky Kingdom',  type: 'image', src: '/images/gamebuilder/bg/clouds.jpg' },
+  { id: 'space',  label: '🚀 Deep Space',   type: 'drawn', draw: drawSpaceBg },
+  { id: 'sunset', label: '🌅 Sunset',        type: 'drawn', draw: drawSunsetBg },
+  { id: 'ocean',  label: '🌊 Ocean Sky',     type: 'drawn', draw: drawOceanBg },
+];
+
+const bgImages = {};
+function preloadBgImages() {
+  BACKGROUNDS.filter(b => b.type === 'image').forEach(b => {
+    const img = new Image();
+    img.src = b.src;
+    bgImages[b.id] = img;
+  });
+}
+
+function drawBackground(ctx, isEditor) {
+  const bg = BACKGROUNDS.find(b => b.id === game.background) || BACKGROUNDS[0];
+  if (bg.type === 'image') {
+    const img = bgImages[bg.id];
+    if (img && img.complete && img.naturalWidth > 0) {
+      ctx.drawImage(img, 0, 0, W, H);
+    } else {
+      ctx.fillStyle = '#0d0d1a'; ctx.fillRect(0, 0, W, H);
+    }
+    if (isEditor) { ctx.fillStyle='rgba(0,0,0,0.42)'; ctx.fillRect(0,0,W,H); }
+  } else if (bg.type === 'drawn') {
+    bg.draw(ctx);
+    if (isEditor) { ctx.fillStyle='rgba(0,0,0,0.42)'; ctx.fillRect(0,0,W,H); }
+  } else {
+    ctx.fillStyle = bg.color || '#0d0d1a'; ctx.fillRect(0, 0, W, H);
+  }
+  if (isEditor) {
+    ctx.strokeStyle='rgba(255,255,255,0.05)'; ctx.lineWidth=1;
+    for(let gx=0;gx<=W;gx+=GRID){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
+    for(let gy=0;gy<=H;gy+=GRID){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
+  } else if (bg.type==='color' && !a11y.highContrast && !a11y.reduceMotion) {
+    ctx.strokeStyle='rgba(255,255,255,0.04)'; ctx.lineWidth=1;
+    for(let gx=0;gx<=W;gx+=40){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
+    for(let gy=0;gy<=H;gy+=40){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
+  }
+}
+
+function renderBgThumbnail(ctx, bg, tw, th) {
+  if (bg.type === 'image') {
+    const img = bgImages[bg.id];
+    if (img && img.complete && img.naturalWidth > 0) {
+      ctx.drawImage(img, 0, 0, tw, th);
+    } else {
+      ctx.fillStyle='#1a1a2e'; ctx.fillRect(0,0,tw,th);
+      ctx.fillStyle='#666'; ctx.font='9px Arial';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('…', tw/2, th/2);
+      img.addEventListener('load', ()=>{ ctx.clearRect(0,0,tw,th); ctx.drawImage(img,0,0,tw,th); }, {once:true});
+    }
+  } else if (bg.type === 'drawn') {
+    ctx.save(); ctx.scale(tw/W, th/H); bg.draw(ctx); ctx.restore();
+  } else {
+    ctx.fillStyle = bg.color||'#0d0d1a'; ctx.fillRect(0,0,tw,th);
+  }
+}
+
+function initBgPicker() {
+  // Wire the select in the info bar
+  const sel = document.getElementById('gi-bg-select');
+  if (sel) {
+    sel.value = game.background || 'dark';
+    sel.addEventListener('change', () => {
+      game.background = sel.value;
+      syncBgActive();
+      renderEditor();
+    });
+  }
+
+  // Build thumbnail grid in the Settings panel
+  const settingsPicker = document.getElementById('gm-bg-picker');
+  if (settingsPicker) {
+    settingsPicker.innerHTML = '';
+    BACKGROUNDS.forEach(bg => {
+      const wrap = document.createElement('div');
+      wrap.className = 'gm-bg-opt' + (game.background===bg.id?' active':'');
+      wrap.title = bg.label;
+      const tc = document.createElement('canvas');
+      tc.width=88; tc.height=54;
+      renderBgThumbnail(tc.getContext('2d'), bg, 88, 54);
+      wrap.appendChild(tc);
+      const lbl = document.createElement('div');
+      lbl.className='gm-bg-label'; lbl.textContent=bg.label;
+      wrap.appendChild(lbl);
+      wrap.addEventListener('click', ()=>{
+        game.background = bg.id;
+        if (sel) sel.value = bg.id;
+        syncBgActive();
+        renderEditor();
+      });
+      settingsPicker.appendChild(wrap);
+    });
+  }
+}
+
+function syncBgActive() {
+  document.querySelectorAll('.gm-bg-opt').forEach(el =>
+    el.classList.toggle('active', el.title === (BACKGROUNDS.find(b=>b.id===game.background)||BACKGROUNDS[0]).label)
+  );
+}
+
 const WALL_COLORS = ['#3355BB','#CC4400','#005533','#882299','#886600','#226677','#444444','#FF6699'];
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -814,6 +1028,7 @@ const game = {
   title:       'My Awesome Game',
   playerName:  'Hero',
   playerEmoji: '🎮',
+  background:  'dark',
   levels:      [],
 };
 
@@ -850,6 +1065,7 @@ function applySnapshot(h) {
   game.title       = g.title;
   game.playerName  = g.playerName;
   game.playerEmoji = g.playerEmoji;
+  game.background  = g.background || 'dark';
   game.levels      = g.levels;
   nextId           = h.nid;
 }
@@ -1077,12 +1293,7 @@ function renderEditor() {
   const lv  = currentLevel();
 
   // Background + grid
-  ctx.fillStyle = '#0d0d1a';
-  ctx.fillRect(0,0,W,H);
-  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-  ctx.lineWidth = 1;
-  for (let gx=0;gx<=W;gx+=GRID){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
-  for (let gy=0;gy<=H;gy+=GRID){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
+  drawBackground(ctx, true);
 
   // Border walls
   ctx.fillStyle='#1a2244';
@@ -1642,12 +1853,8 @@ function updatePlay(st) {
 function drawPlay(st) {
   const ctx=pCtx, HC=a11y.highContrast, LG=a11y.largeSprites, ps=st.player;
 
-  ctx.fillStyle=HC?'#000':'#0d0d1a'; ctx.fillRect(0,0,W,H);
-  if (!HC&&!a11y.reduceMotion) {
-    ctx.strokeStyle='rgba(255,255,255,0.04)'; ctx.lineWidth=1;
-    for(let gx=0;gx<=W;gx+=40){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
-    for(let gy=0;gy<=H;gy+=40){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
-  }
+  if (HC) { ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H); }
+  else     { drawBackground(ctx, false); }
 
   // Border
   ctx.fillStyle=HC?'#FFF':'#1a2244';
@@ -1831,6 +2038,7 @@ function loadGame() {
     if (eb) eb.textContent = game.playerEmoji;
     document.querySelectorAll('.gi-emoji-opt').forEach(b => b.classList.toggle('selected', b.textContent===game.playerEmoji));
     saveHistory(); updateLevelTabs(); renderEditor();
+    initBgPicker();
     setStatus('📂 Game loaded!');
   } catch(e) { setStatus('❌ Could not load game.'); }
 }
@@ -2248,8 +2456,10 @@ function loadStarterLevel() {
   ];
 }
 
+preloadBgImages();
 loadStarterLevel();
 initGameInfoUI();
+initBgPicker();
 initDpad();
 initVoice();
 saveHistory();
