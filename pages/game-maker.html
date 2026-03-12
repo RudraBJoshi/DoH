@@ -10,11 +10,11 @@ permalink: /game-maker/
 #gm-app * { box-sizing: border-box; }
 #gm-app {
   font-family: 'Segoe UI', Arial, sans-serif;
-  background: #0d0d1a;
-  color: #eee;
+  background: #07071a;
+  color: #f0f0ff;
   min-height: 100vh;
-  padding: 10px;
-  max-width: 1100px;
+  padding: 20px;
+  max-width: 1500px;
   margin: 0 auto;
 }
 
@@ -24,63 +24,65 @@ permalink: /game-maker/
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 14px;
+  margin-bottom: 16px;
 }
 #gm-header h1 {
-  font-size: 1.6rem;
+  font-size: 2.4rem;
   color: #FFD700;
   margin: 0;
-  text-shadow: 0 0 14px rgba(255,215,0,0.4);
+  text-shadow: 0 0 24px rgba(255,215,0,0.7), 0 0 48px rgba(255,215,0,0.3);
+  letter-spacing: 0.02em;
 }
-#gm-tabs { display: flex; gap: 8px; }
+#gm-tabs { display: flex; gap: 12px; }
 .gm-tab {
-  padding: 9px 20px;
-  border: 2px solid #444;
+  padding: 12px 28px;
+  border: 2px solid #556;
   border-radius: 30px;
-  background: #1e1e2e;
-  color: #aaa;
-  font-size: 0.95rem;
+  background: #1a1a3e;
+  color: #ccc;
+  font-size: 1.08rem;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.18s;
 }
-.gm-tab:hover { border-color: #888; color: #fff; }
-.gm-tab.active { background: #FFD700; color: #000; border-color: #FFD700; }
+.gm-tab:hover { border-color: #aaa; color: #fff; background: #24244a; }
+.gm-tab.active { background: #FFD700; color: #000; border-color: #FFD700; box-shadow: 0 0 16px rgba(255,215,0,0.5); }
 
 /* ─── Game Info Bar (title + character) ─────────────────────────────────── */
 #gm-game-info-bar {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 22px;
   flex-wrap: wrap;
-  background: #141428;
-  border: 1px solid #333;
-  border-radius: 10px;
-  padding: 10px 16px;
-  margin-bottom: 10px;
+  background: #0e0e30;
+  border: 2px solid #3344aa;
+  border-radius: 14px;
+  padding: 14px 22px;
+  margin-bottom: 14px;
+  box-shadow: 0 0 20px rgba(50,80,255,0.12);
 }
-.gi-section { display: flex; flex-direction: column; gap: 4px; }
-.gi-section label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: #888; font-weight: bold; }
+.gi-section { display: flex; flex-direction: column; gap: 6px; }
+.gi-section label { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.07em; color: #aabbff; font-weight: bold; }
 #gi-title {
-  background: #1e1e2e;
-  border: 1px solid #444;
-  border-radius: 8px;
-  color: #FFD700;
-  font-size: 1.05rem;
-  font-weight: bold;
-  padding: 6px 12px;
-  width: 240px;
-}
-#gi-title::placeholder { color: #555; }
-.gi-char-row { display: flex; align-items: center; gap: 8px; position: relative; }
-#gi-emoji-btn {
-  font-size: 1.5rem;
-  width: 42px;
-  height: 42px;
-  border: 2px solid #444;
+  background: #1a1a40;
+  border: 2px solid #4455bb;
   border-radius: 10px;
-  background: #1e1e2e;
+  color: #FFD700;
+  font-size: 1.25rem;
+  font-weight: bold;
+  padding: 8px 14px;
+  width: 300px;
+}
+#gi-title::placeholder { color: #556; }
+.gi-char-row { display: flex; align-items: center; gap: 10px; position: relative; }
+#gi-emoji-btn {
+  font-size: 2rem;
+  width: 56px;
+  height: 56px;
+  border: 2px solid #556;
+  border-radius: 12px;
+  background: #1a1a40;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -133,15 +135,15 @@ permalink: /game-maker/
 .gi-emoji-opt:hover { border-color: #FFD700; background: #2a260a; }
 .gi-emoji-opt.selected { border-color: #FFD700; background: #2a260a; }
 #gi-char-name {
-  background: #1e1e2e;
-  border: 1px solid #444;
-  border-radius: 8px;
+  background: #1a1a40;
+  border: 2px solid #4455bb;
+  border-radius: 10px;
   color: #fff;
-  font-size: 1rem;
-  padding: 6px 10px;
-  width: 130px;
+  font-size: 1.15rem;
+  padding: 8px 12px;
+  width: 170px;
 }
-#gi-char-name::placeholder { color: #555; }
+#gi-char-name::placeholder { color: #668; }
 
 /* ─── Mode Panels ───────────────────────────────────────────────────────── */
 .gm-mode { display: none; }
@@ -151,52 +153,55 @@ permalink: /game-maker/
 #gm-design-layout { display: flex; gap: 10px; align-items: flex-start; }
 
 /* ─── Toolbar ───────────────────────────────────────────────────────────── */
-#gm-toolbar { display: flex; flex-direction: column; gap: 6px; min-width: 116px; }
+#gm-toolbar { display: flex; flex-direction: column; gap: 8px; min-width: 155px; }
 #gm-toolbar h3 {
   margin: 0 0 4px;
-  font-size: 0.72rem;
+  font-size: 0.84rem;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: #666;
+  letter-spacing: 0.08em;
+  color: #aabbff;
+  font-weight: bold;
 }
 .gm-tool-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 9px 5px;
-  border: 2px solid #333;
-  border-radius: 10px;
-  background: #1e1e2e;
-  color: #ddd;
-  font-size: 0.78rem;
+  padding: 12px 6px;
+  border: 2px solid #445;
+  border-radius: 12px;
+  background: #1a1a3e;
+  color: #ddeeff;
+  font-size: 0.92rem;
   cursor: pointer;
   transition: all 0.15s;
-  gap: 3px;
+  gap: 4px;
   text-align: center;
   line-height: 1.2;
+  font-weight: bold;
 }
-.gm-tool-btn .ti { font-size: 1.5rem; }
-.gm-tool-btn:hover { border-color: #666; background: #252540; }
-.gm-tool-btn.active { border-color: #FFD700; background: #2a260a; color: #FFD700; }
-.gm-sep { height: 1px; background: #2a2a3a; margin: 3px 0; }
+.gm-tool-btn .ti { font-size: 2rem; }
+.gm-tool-btn:hover { border-color: #88aaff; background: #22224a; color: #fff; }
+.gm-tool-btn.active { border-color: #FFD700; background: #2e2800; color: #FFD700; box-shadow: 0 0 12px rgba(255,215,0,0.35); }
+.gm-sep { height: 2px; background: #2a2a50; margin: 4px 0; border-radius: 1px; }
 .gm-act {
-  padding: 7px 5px;
-  border: 1px solid #444;
-  border-radius: 8px;
-  background: #1e1e2e;
-  color: #ccc;
-  font-size: 0.78rem;
+  padding: 9px 6px;
+  border: 2px solid #445;
+  border-radius: 10px;
+  background: #1a1a3e;
+  color: #cce;
+  font-size: 0.92rem;
+  font-weight: bold;
   cursor: pointer;
   transition: all 0.15s;
   text-align: center;
   width: 100%;
 }
-.gm-act:hover { background: #252540; color: #fff; }
-.gm-act.danger  { border-color: #662222; color: #ff9999; }
-.gm-act.danger:hover  { background: #3a1010; }
-.gm-act.primary { border-color: #FFD700; color: #FFD700; }
-.gm-act.primary:hover { background: #2a260a; }
+.gm-act:hover { background: #22224a; color: #fff; border-color: #88aaff; }
+.gm-act.danger  { border-color: #882222; color: #ff8888; }
+.gm-act.danger:hover  { background: #3a1010; border-color: #ff4444; }
+.gm-act.primary { border-color: #FFD700; color: #FFD700; font-size: 1.05rem; }
+.gm-act.primary:hover { background: #2e2800; box-shadow: 0 0 12px rgba(255,215,0,0.4); }
 
 /* ─── Editor Wrap ───────────────────────────────────────────────────────── */
 #gm-editor-wrap { flex: 1; display: flex; flex-direction: column; gap: 6px; }
