@@ -16,6 +16,7 @@ permalink: /game-maker/
   padding: 20px;
   max-width: 1500px;
   margin: 0 auto;
+  overflow-x: hidden;
 }
 
 /* ─── Header ────────────────────────────────────────────────────────────── */
@@ -204,7 +205,7 @@ permalink: /game-maker/
 .gm-act.primary:hover { background: #2e2800; box-shadow: 0 0 12px rgba(255,215,0,0.4); }
 
 /* ─── Editor Wrap ───────────────────────────────────────────────────────── */
-#gm-editor-wrap { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+#gm-editor-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
 
 /* Level tabs bar */
 #gm-level-tabs-bar {
