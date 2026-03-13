@@ -448,6 +448,13 @@ function handleGoogleDispatch(response) {
             if (res.ok) {
                 document.getElementById('suOtpTarget').textContent = email;
                 suEmail = email;
+                // Dev mode: backend returns OTP directly when SMTP not configured
+                if (data.dev_otp) {
+                    document.getElementById('suDevOtpCode').textContent = data.dev_otp;
+                    document.getElementById('suDevOtpBox').style.display = '';
+                } else {
+                    document.getElementById('suDevOtpBox').style.display = 'none';
+                }
                 suShowStep(2);
             } else {
                 showMsg('suEmailMsg', data.message || 'Failed to send code.', 'error');
