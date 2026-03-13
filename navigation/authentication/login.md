@@ -549,7 +549,7 @@ function handleGoogleDispatch(response) {
             const res = await fetch(`${pythonURI}/api/user`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, uid, sid, school, email: suEmail, password, kasm_server_needed: kasm })
+                body: JSON.stringify({ name, uid, sid, school, email: suEmail, password, kasm_server_needed: kasm, auth_type: suIsGoogle ? 'google' : 'otp' })
             });
             if (res.ok) {
                 msgEl.className = 'overall-status success';
