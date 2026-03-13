@@ -196,6 +196,9 @@ function handleGoogleDispatch(response) {
                 Enter the 6-digit code sent to
                 <strong id="suOtpTarget" style="color:#e2e8f0;"></strong>
             </p>
+            <div id="suDevOtpBox" style="display:none; background:#1a3a1a; border:1px solid #2d6a2d; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; font-size:0.9rem; color:#86efac;">
+                <strong>Dev mode:</strong> Your code is <strong id="suDevOtpCode" style="font-size:1.2rem; letter-spacing:0.3rem;"></strong>
+            </div>
             <div class="form-group">
                 <input type="text" id="suOtpCode" class="otp-input"
                        placeholder="000000" maxlength="6"
@@ -448,6 +451,13 @@ function handleGoogleDispatch(response) {
             if (res.ok) {
                 document.getElementById('suOtpTarget').textContent = email;
                 suEmail = email;
+                // Dev mode: backend returns OTP directly when SMTP not configured
+                if (data.dev_otp) {
+                    document.getElementById('suDevOtpCode').textContent = data.dev_otp;
+                    document.getElementById('suDevOtpBox').style.display = '';
+                } else {
+                    document.getElementById('suDevOtpBox').style.display = 'none';
+                }
                 suShowStep(2);
             } else {
                 showMsg('suEmailMsg', data.message || 'Failed to send code.', 'error');

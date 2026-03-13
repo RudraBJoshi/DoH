@@ -2025,28 +2025,104 @@ function playLoop() {
    SAVE / LOAD
 ═══════════════════════════════════════════════════════════════════════════ */
 const SAVE_KEY = 'uesl_gm_v2';
+const PYTHON_URI = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+  ? 'http://localhost:8800'
+  : 'https://flask.opencodingsociety.com';
 
-function saveGame() {
-  localStorage.setItem(SAVE_KEY, JSON.stringify({ game, nextId }));
-  setStatus('💾 Game saved!');
+/* Check if the user is logged in.
+   login.js (loaded in the page header) sets window.user asynchronously.
+   We wait up to 2 s for it, then fall back to a direct /api/id ping. */
+let gmLoggedIn = null;
+async function checkLogin() {
+  if (gmLoggedIn !== null) return gmLoggedIn;
+  // Fast path: login.js already resolved window.user
+  if (window.user !== undefined) {
+    gmLoggedIn = !!window.user;
+    return gmLoggedIn;
+  }
+  // Slow path: wait up to 2 s for login.js to finish
+  await new Promise(res => {
+    let ticks = 0;
+    const id = setInterval(() => {
+      if (window.user !== undefined || ++ticks >= 20) { clearInterval(id); res(); }
+    }, 100);
+  });
+  if (window.user !== undefined) {
+    gmLoggedIn = !!window.user;
+    return gmLoggedIn;
+  }
+  // Last resort: ping the backend ourselves
+  try {
+    const r = await fetch(PYTHON_URI + '/api/id', { credentials: 'include' });
+    gmLoggedIn = r.ok;
+  } catch(e) {
+    gmLoggedIn = false;
+  }
+  return gmLoggedIn;
 }
 
-function loadGame() {
+/* Apply loaded game data (shared by both local and cloud paths) */
+function applyGameData(data) {
+  Object.assign(game, data.game);
+  nextId = data.nextId || nextId;
+  currentLevelIdx = 0;
+  document.getElementById('gi-title').value     = game.title;
+  document.getElementById('gi-char-name').value = game.playerName;
+  const eb = document.getElementById('gi-emoji-btn');
+  if (eb) eb.textContent = game.playerEmoji;
+  document.querySelectorAll('.gi-emoji-opt').forEach(b => b.classList.toggle('selected', b.textContent===game.playerEmoji));
+  saveHistory(); updateLevelTabs(); renderEditor();
+  initBgPicker();
+}
+
+async function saveGame() {
+  const payload = JSON.stringify({ game, nextId });
+  // Always write to localStorage as a backup
+  localStorage.setItem(SAVE_KEY, payload);
+
+  const loggedIn = await checkLogin();
+  if (loggedIn) {
+    try {
+      const r = await fetch(PYTHON_URI + '/api/game/save', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ game_data: payload }),
+      });
+      if (r.ok) {
+        setStatus('💾 Game saved to your account!');
+        return;
+      }
+    } catch(e) { /* fall through */ }
+    setStatus('💾 Saved locally (cloud save failed — is the backend running?)');
+  } else {
+    setStatus('💾 Game saved locally. Log in to save to your account.');
+  }
+}
+
+async function loadGame() {
+  const loggedIn = await checkLogin();
+  if (loggedIn) {
+    try {
+      const r = await fetch(PYTHON_URI + '/api/game/load', { credentials: 'include' });
+      if (r.ok) {
+        const json = await r.json();
+        const data = JSON.parse(json.game_data);
+        applyGameData(data);
+        setStatus('📂 Game loaded from your account!');
+        return;
+      } else if (r.status !== 404) {
+        setStatus('❌ Cloud load failed — falling back to local save.');
+      }
+    } catch(e) { /* fall through to localStorage */ }
+  }
+
+  // Fallback: localStorage
   const raw = localStorage.getItem(SAVE_KEY);
   if (!raw) { setStatus('📂 No saved game found.'); return; }
   try {
-    const data = JSON.parse(raw);
-    Object.assign(game, data.game);
-    nextId = data.nextId || nextId;
-    currentLevelIdx = 0;
-    document.getElementById('gi-title').value     = game.title;
-    document.getElementById('gi-char-name').value = game.playerName;
-    const eb = document.getElementById('gi-emoji-btn');
-    if (eb) eb.textContent = game.playerEmoji;
-    document.querySelectorAll('.gi-emoji-opt').forEach(b => b.classList.toggle('selected', b.textContent===game.playerEmoji));
-    saveHistory(); updateLevelTabs(); renderEditor();
-    initBgPicker();
-    setStatus('📂 Game loaded!');
+    applyGameData(JSON.parse(raw));
+    setStatus(loggedIn ? '📂 Game loaded from local backup.' : '📂 Game loaded! Log in to save to your account.');
   } catch(e) { setStatus('❌ Could not load game.'); }
 }
 
