@@ -601,7 +601,77 @@ permalink: /game-maker/
   #gm-props { width: 100%; }
   .gi-char-row { flex-wrap: wrap; }
 }
+
+/* ─── Game Library / Save-Name Modals ──────────────────────────────────── */
+.gm-modal-backdrop {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75); z-index: 9999;
+  align-items: center; justify-content: center;
+}
+.gm-modal-backdrop.open { display: flex; }
+.gm-modal {
+  background: #0e0e30; border: 2px solid #3344aa;
+  border-radius: 16px; padding: 2rem; width: 520px; max-width: 95vw;
+  max-height: 80vh; display: flex; flex-direction: column; gap: 1rem;
+  box-shadow: 0 0 40px rgba(50,80,255,0.3);
+}
+.gm-modal h2 { margin: 0; font-size: 1.4rem; color: #FFD700; }
+.gm-modal input[type="text"] {
+  width: 100%; padding: 0.65rem 0.9rem; background: #12121f;
+  border: 2px solid #4455bb; border-radius: 8px; color: #e2e8f0;
+  font-size: 1.1rem; box-sizing: border-box;
+}
+.gm-modal input[type="text"]:focus { outline: none; border-color: #6366f1; }
+.gm-modal-btns { display: flex; gap: 0.75rem; }
+.gm-modal-btns button { flex: 1; padding: 0.65rem; border-radius: 8px; border: none; font-size: 1rem; cursor: pointer; font-weight: bold; }
+.gm-modal-btns .btn-confirm { background: #6366f1; color: #fff; }
+.gm-modal-btns .btn-confirm:hover { background: #4f46e5; }
+.gm-modal-btns .btn-cancel  { background: #1a1a40; color: #aaa; border: 1px solid #3b3b5c; }
+.gm-modal-btns .btn-cancel:hover { border-color: #6366f1; color: #fff; }
+/* library list */
+#gm-library-list { overflow-y: auto; display: flex; flex-direction: column; gap: 0.6rem; }
+.gm-lib-item {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #1a1a40; border: 1px solid #3344aa; border-radius: 10px;
+  padding: 0.75rem 1rem;
+}
+.gm-lib-item-name { font-size: 1rem; color: #e2e8f0; flex: 1; }
+.gm-lib-item-date { font-size: 0.78rem; color: #7788cc; margin: 0 1rem; }
+.gm-lib-item-btns { display: flex; gap: 0.5rem; }
+.gm-lib-item-btns button { padding: 0.4rem 0.9rem; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; font-size: 0.85rem; }
+.btn-load-game { background: #FFD700; color: #000; }
+.btn-load-game:hover { background: #ffc200; }
+.btn-del-game  { background: #450a0a; color: #fca5a5; }
+.btn-del-game:hover { background: #7f1d1d; }
+.gm-lib-empty { color: #6677aa; text-align: center; padding: 1.5rem 0; font-size: 0.95rem; }
 </style>
+
+<!-- ══ SAVE-NAME MODAL ══════════════════════════════════════════════════════ -->
+<div id="gm-savename-modal" class="gm-modal-backdrop">
+  <div class="gm-modal">
+    <h2>💾 Save Game</h2>
+    <p style="color:#9ca3af; margin:0; font-size:0.9rem;">Give your game a name. Saving again with the same name will overwrite it.</p>
+    <input type="text" id="gm-savename-input" placeholder="My Awesome Game" maxlength="80">
+    <div id="gm-savename-msg" style="font-size:0.88rem; color:#fca5a5; min-height:1.2em;"></div>
+    <div class="gm-modal-btns">
+      <button class="btn-cancel"  id="gm-savename-cancel">Cancel</button>
+      <button class="btn-confirm" id="gm-savename-confirm">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LIBRARY MODAL ════════════════════════════════════════════════════════ -->
+<div id="gm-library-modal" class="gm-modal-backdrop">
+  <div class="gm-modal">
+    <h2>📂 My Games</h2>
+    <div id="gm-library-list">
+      <div class="gm-lib-empty">Loading…</div>
+    </div>
+    <div class="gm-modal-btns">
+      <button class="btn-cancel" id="gm-library-close">Close</button>
+    </div>
+  </div>
+</div>
 
 <div id="gm-app">
 
@@ -668,7 +738,7 @@ permalink: /game-maker/
         <div class="gm-sep"></div>
         <h3>Game</h3>
         <button class="gm-act" id="gm-save-btn">💾 Save</button>
-        <button class="gm-act" id="gm-load-btn">📂 Load</button>
+        <button class="gm-act" id="gm-load-btn">📂 My Games</button>
         <button class="gm-act primary" id="gm-play-btn">▶ Play!</button>
       </div>
 
@@ -2075,55 +2145,153 @@ function applyGameData(data) {
   initBgPicker();
 }
 
-async function saveGame() {
+/* ── Modal helpers ── */
+function gmOpenModal(id)  { document.getElementById(id).classList.add('open'); }
+function gmCloseModal(id) { document.getElementById(id).classList.remove('open'); }
+
+/* ── Save flow: open name modal, pre-fill with game title ── */
+function saveGame() {
+  const titleVal = (document.getElementById('gi-title').value || '').trim();
+  document.getElementById('gm-savename-input').value = titleVal;
+  document.getElementById('gm-savename-msg').textContent = '';
+  gmOpenModal('gm-savename-modal');
+  setTimeout(() => document.getElementById('gm-savename-input').focus(), 60);
+}
+
+async function gmConfirmSave() {
+  const name = document.getElementById('gm-savename-input').value.trim();
+  const msgEl = document.getElementById('gm-savename-msg');
+  if (!name) { msgEl.textContent = 'Please enter a name for your game.'; return; }
+
   const payload = JSON.stringify({ game, nextId });
-  // Always write to localStorage as a backup
-  localStorage.setItem(SAVE_KEY, payload);
+  localStorage.setItem(SAVE_KEY, payload);   // always backup locally
 
   const loggedIn = await checkLogin();
-  if (loggedIn) {
-    try {
-      const r = await fetch(PYTHON_URI + '/api/game/save', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ game_data: payload }),
-      });
-      if (r.ok) {
-        setStatus('💾 Game saved to your account!');
-        return;
-      }
-    } catch(e) { /* fall through */ }
-    setStatus('💾 Saved locally (cloud save failed — is the backend running?)');
-  } else {
-    setStatus('💾 Game saved locally. Log in to save to your account.');
+  if (!loggedIn) {
+    gmCloseModal('gm-savename-modal');
+    setStatus('💾 Saved locally. Log in to save to your account.');
+    return;
+  }
+
+  msgEl.textContent = '';
+  msgEl.style.color = '#93c5fd';
+  msgEl.textContent = 'Saving…';
+  try {
+    const r = await fetch(PYTHON_URI + '/api/game/save', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, game_data: payload }),
+    });
+    if (r.ok) {
+      gmCloseModal('gm-savename-modal');
+      setStatus(`💾 "${name}" saved to your account!`);
+      return;
+    }
+    const err = await r.json().catch(() => ({}));
+    msgEl.style.color = '#fca5a5';
+    msgEl.textContent = err.message || 'Save failed.';
+  } catch(e) {
+    msgEl.style.color = '#fca5a5';
+    msgEl.textContent = 'Network error — is the backend running?';
   }
 }
 
+/* Enter key confirms save modal */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('gm-savename-modal').classList.contains('open')) {
+    gmConfirmSave();
+  }
+});
+
+/* ── Load flow: show library modal ── */
 async function loadGame() {
   const loggedIn = await checkLogin();
-  if (loggedIn) {
-    try {
-      const r = await fetch(PYTHON_URI + '/api/game/load', { credentials: 'include' });
-      if (r.ok) {
-        const json = await r.json();
-        const data = JSON.parse(json.game_data);
-        applyGameData(data);
-        setStatus('📂 Game loaded from your account!');
-        return;
-      } else if (r.status !== 404) {
-        setStatus('❌ Cloud load failed — falling back to local save.');
-      }
-    } catch(e) { /* fall through to localStorage */ }
+  if (!loggedIn) {
+    // Not logged in — fall back to localStorage
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) { setStatus('📂 No saved game found. Log in to access cloud saves.'); return; }
+    try { applyGameData(JSON.parse(raw)); setStatus('📂 Game loaded! Log in to save to your account.'); }
+    catch(e) { setStatus('❌ Could not load game.'); }
+    return;
   }
 
-  // Fallback: localStorage
-  const raw = localStorage.getItem(SAVE_KEY);
-  if (!raw) { setStatus('📂 No saved game found.'); return; }
+  // Logged in — show library
+  const listEl = document.getElementById('gm-library-list');
+  listEl.innerHTML = '<div class="gm-lib-empty">Loading…</div>';
+  gmOpenModal('gm-library-modal');
+
   try {
-    applyGameData(JSON.parse(raw));
-    setStatus(loggedIn ? '📂 Game loaded from local backup.' : '📂 Game loaded! Log in to save to your account.');
-  } catch(e) { setStatus('❌ Could not load game.'); }
+    const r = await fetch(PYTHON_URI + '/api/game/list', { credentials: 'include' });
+    if (!r.ok) throw new Error('list failed');
+    const { games } = await r.json();
+    if (!games || games.length === 0) {
+      listEl.innerHTML = '<div class="gm-lib-empty">No saved games yet. Hit 💾 Save to create one!</div>';
+      return;
+    }
+    listEl.innerHTML = '';
+    games.forEach(rec => {
+      const date = rec.updated_at ? new Date(rec.updated_at).toLocaleString() : '';
+      const item = document.createElement('div');
+      item.className = 'gm-lib-item';
+      item.innerHTML = `
+        <span class="gm-lib-item-name">${escHtml(rec.name)}</span>
+        <span class="gm-lib-item-date">${escHtml(date)}</span>
+        <div class="gm-lib-item-btns">
+          <button class="btn-load-game" data-id="${rec.id}" data-name="${escAttr(rec.name)}">▶ Load</button>
+          <button class="btn-del-game"  data-id="${rec.id}" data-name="${escAttr(rec.name)}">🗑 Delete</button>
+        </div>`;
+      listEl.appendChild(item);
+    });
+
+    listEl.querySelectorAll('.btn-load-game').forEach(btn => {
+      btn.addEventListener('click', () => gmLibLoad(btn.dataset.id, btn.dataset.name));
+    });
+    listEl.querySelectorAll('.btn-del-game').forEach(btn => {
+      btn.addEventListener('click', () => gmLibDelete(btn.dataset.id, btn.dataset.name, btn));
+    });
+  } catch(e) {
+    listEl.innerHTML = '<div class="gm-lib-empty" style="color:#fca5a5;">Failed to load games — is the backend running?</div>';
+  }
+}
+
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(s) { return String(s).replace(/"/g,'&quot;'); }
+
+async function gmLibLoad(id, name) {
+  try {
+    const r = await fetch(PYTHON_URI + `/api/game/load/${id}`, { credentials: 'include' });
+    if (!r.ok) { setStatus('❌ Could not load that game.'); return; }
+    const json = await r.json();
+    const data = JSON.parse(json.game_data);
+    applyGameData(data);
+    gmCloseModal('gm-library-modal');
+    setStatus(`📂 "${name}" loaded!`);
+  } catch(e) {
+    setStatus('❌ Network error loading game.');
+  }
+}
+
+async function gmLibDelete(id, name, btn) {
+  if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+  btn.disabled = true;
+  try {
+    const r = await fetch(PYTHON_URI + `/api/game/delete/${id}`, {
+      method: 'DELETE', credentials: 'include'
+    });
+    if (r.ok) {
+      btn.closest('.gm-lib-item').remove();
+      const listEl = document.getElementById('gm-library-list');
+      if (!listEl.children.length) {
+        listEl.innerHTML = '<div class="gm-lib-empty">No saved games yet. Hit 💾 Save to create one!</div>';
+      }
+    } else {
+      btn.disabled = false;
+      setStatus('❌ Could not delete that game.');
+    }
+  } catch(e) {
+    btn.disabled = false;
+    setStatus('❌ Network error deleting game.');
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -2212,6 +2380,9 @@ document.getElementById('gm-clear-btn').addEventListener('click', () => {
 });
 document.getElementById('gm-save-btn').addEventListener('click', saveGame);
 document.getElementById('gm-load-btn').addEventListener('click', loadGame);
+document.getElementById('gm-savename-cancel').addEventListener('click', () => gmCloseModal('gm-savename-modal'));
+document.getElementById('gm-savename-confirm').addEventListener('click', gmConfirmSave);
+document.getElementById('gm-library-close').addEventListener('click', () => gmCloseModal('gm-library-modal'));
 document.getElementById('gm-play-btn').addEventListener('click', () => {
   if (!startPlay()) return;
   document.querySelectorAll('.gm-tab').forEach(b=>b.classList.remove('active'));
