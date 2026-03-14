@@ -542,6 +542,71 @@ permalink: /game-maker/
 #gm-voice-examples.show { display: block; }
 #gm-voice-examples b { color: #666; }
 
+/* ── Face Cam bar ────────────────────────────────────────────────────────── */
+#gm-face-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  padding: 8px 16px;
+  background: #0d0d1a;
+  border: 1px solid #222;
+  border-radius: 12px;
+}
+#gm-face-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border: 2px solid #333;
+  border-radius: 24px;
+  background: #1e1e2e;
+  color: #666;
+  font-size: 0.82rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+#gm-face-btn:hover { border-color: #666; color: #aaa; }
+#gm-face-btn.active {
+  border-color: #00BFFF;
+  color: #00BFFF;
+  background: #0a1a2a;
+  animation: gm-face-pulse 1.6s ease-in-out infinite;
+}
+@keyframes gm-face-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(0,191,255,0.5); }
+  50%      { box-shadow: 0 0 0 10px rgba(0,191,255,0); }
+}
+#gm-face-bar-status { font-size: 0.78rem; color: #555; flex: 1; min-width: 100px; }
+#gm-face-bar-preview {
+  border-radius: 8px;
+  border: 2px solid #333;
+  display: none;
+  width: 80px;
+  height: 60px;
+}
+#gm-face-bar-preview.show { display: block; }
+#gm-face-bar-dirs { display: none; gap: 4px; font-size: 1rem; }
+#gm-face-bar-dirs.show { display: flex; }
+#gm-face-bar-dirs span { opacity: 0.25; transition: opacity 0.1s; }
+#gm-face-bar-dirs span.lit { opacity: 1; color: #FFD700; }
+#gm-face-recal-bar {
+  padding: 4px 10px;
+  border: 1px solid #334;
+  border-radius: 16px;
+  background: #12122a;
+  color: #aabbff;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: none;
+  white-space: nowrap;
+}
+#gm-face-recal-bar.show { display: inline-block; }
+
 #gm-play-controls-hint {
   margin-top: 8px;
   font-size: 0.78rem;
@@ -868,6 +933,26 @@ permalink: /game-maker/
         "move forward 10" &nbsp;·&nbsp; "stop"
       </div>
     </div>
+
+    <!-- Face Cam Control Bar -->
+    <div id="gm-face-bar">
+      <!-- Hidden video element for webcam feed -->
+      <video id="gm-face-video" style="display:none;" autoplay playsinline muted></video>
+      <button id="gm-face-btn" title="Toggle face tracking — lean your head to move the player">
+        📷 Face Cam: Off
+      </button>
+      <div id="gm-face-bar-status">Lean your head left · right · up · down to move</div>
+      <canvas id="gm-face-bar-preview" width="80" height="60"></canvas>
+      <div id="gm-face-bar-dirs">
+        <span id="fbd-up">↑</span>
+        <span id="fbd-down">↓</span>
+        <span id="fbd-left">←</span>
+        <span id="fbd-right">→</span>
+      </div>
+      <button id="gm-face-recal-bar" title="Reset neutral center to current head position">
+        🎯 Recalibrate
+      </button>
+    </div>
   </div>
 
   <!-- ══════════ SETTINGS MODE ══════════════════════════════════════════ -->
@@ -905,10 +990,51 @@ permalink: /game-maker/
         <label class="gm-tog"><input type="checkbox" id="gs-celebrate" checked>
           <span>🎉 Celebrations<span class="td">Particle bursts on collection &amp; level complete</span></span></label>
       </div>
+      <div class="gm-set-sec">
+        <h3>📷 Face Tracking</h3>
+        <label class="gm-tog"><input type="checkbox" id="gs-face">
+          <span>📷 Face Control<span class="td">Use your head to move — lean left/right/up/down</span></span></label>
+        <div id="gm-face-panel" style="display:none; margin-top:10px;">
+          <!-- Hidden video element — webcam feed goes here -->
+          <video id="gm-face-video" style="display:none;" autoplay playsinline muted></video>
+          <!-- Small live preview thumbnail -->
+          <canvas id="gm-face-preview" width="160" height="120"
+            style="border-radius:8px; border:2px solid #556; display:block; margin-bottom:8px;"></canvas>
+          <!-- Status line -->
+          <div id="gm-face-status" style="font-size:0.82rem; color:#aabbff; margin-bottom:8px;">
+            Waiting for camera...
+          </div>
+          <!-- Sensitivity slider -->
+          <label style="font-size:0.82rem; color:#aabbff; display:block; margin-bottom:4px;">
+            Sensitivity:
+            <input type="range" id="gm-face-sens" min="4" max="25" value="12"
+              style="width:120px; vertical-align:middle;">
+            <span id="gm-face-sens-val">12</span>%
+          </label>
+          <!-- Recalibrate button -->
+          <button id="gm-face-recal" style="
+            background:#1a1a40; border:2px solid #4455bb; border-radius:8px;
+            color:#FFD700; font-size:0.85rem; padding:6px 14px; cursor:pointer;">
+            🎯 Recalibrate Center
+          </button>
+          <!-- Live direction indicator -->
+          <div id="gm-face-dirs" style="display:flex; gap:6px; margin-top:8px; font-size:1.1rem;">
+            <span id="fd-up"    style="opacity:0.25;">↑</span>
+            <span id="fd-down"  style="opacity:0.25;">↓</span>
+            <span id="fd-left"  style="opacity:0.25;">←</span>
+            <span id="fd-right" style="opacity:0.25;">→</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
 </div><!-- #gm-app -->
+
+<!-- ── MediaPipe FaceMesh (loaded once, used by face-tracker.js) ──────── -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/face_mesh.js" crossorigin="anonymous"></script>
+<script src="/assets/js/face-tracker.js"></script>
 
 <script>
 // Redirect 127.0.0.1 → localhost so Chrome's Web Speech API works reliably
@@ -1857,10 +1983,13 @@ function updatePlay(st) {
       if(st.sbDir===2)ps.vx=-spd; if(st.sbDir===3)ps.vy=-spd;
     }
   } else {
-    if(playKeys['ArrowLeft'] ||playKeys['a']||playKeys['A'])ps.vx-=spd;
-    if(playKeys['ArrowRight']||playKeys['d']||playKeys['D'])ps.vx+=spd;
-    if(playKeys['ArrowUp']   ||playKeys['w']||playKeys['W'])ps.vy-=spd;
-    if(playKeys['ArrowDown'] ||playKeys['s']||playKeys['S'])ps.vy+=spd;
+    // Face tracking input — merged with keyboard so both work simultaneously
+    const fc = (window.FaceTracker && window.window.FaceTracker.active)
+      ? window.window.FaceTracker.controls : {};
+    if(playKeys['ArrowLeft'] ||playKeys['a']||playKeys['A']||fc.left) ps.vx-=spd;
+    if(playKeys['ArrowRight']||playKeys['d']||playKeys['D']||fc.right)ps.vx+=spd;
+    if(playKeys['ArrowUp']   ||playKeys['w']||playKeys['W']||fc.up)   ps.vy-=spd;
+    if(playKeys['ArrowDown'] ||playKeys['s']||playKeys['S']||fc.down) ps.vy+=spd;
   }
 
   // Voice move: if a voice command is queued, apply it and override keyboard input
@@ -2722,6 +2851,124 @@ updateLevelTabs();
 renderEditor();
 updatePropsPanel();
 setStatus('👋 Welcome! Customize your Game Title and Character above, then build your levels!');
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FACE TRACKING — play-area button + settings panel wiring
+═══════════════════════════════════════════════════════════════════════════ */
+(function initFaceTracking() {
+  // ── Play-area elements (the visible Face Cam bar) ──────────────────────
+  const faceBtn     = document.getElementById('gm-face-btn');
+  const video       = document.getElementById('gm-face-video');
+  const barStatus   = document.getElementById('gm-face-bar-status');
+  const barPreview  = document.getElementById('gm-face-bar-preview');
+  const barDirs     = document.getElementById('gm-face-bar-dirs');
+  const recalBar    = document.getElementById('gm-face-recal-bar');
+  const barCtx      = barPreview ? barPreview.getContext('2d') : null;
+
+  // ── Settings panel elements (advanced controls) ────────────────────────
+  const settingsToggle = document.getElementById('gs-face');
+  const settingsPanel  = document.getElementById('gm-face-panel');
+  const sensSlider     = document.getElementById('gm-face-sens');
+  const sensVal        = document.getElementById('gm-face-sens-val');
+  const recalSettings  = document.getElementById('gm-face-recal');
+  const settingsStatus = document.getElementById('gm-face-status');
+
+  if (!faceBtn || !video) return;
+
+  // ── Status callback — updates both the bar and the settings panel ──────
+  window.FaceTracker.onStatusChange = (msg) => {
+    if (barStatus)     barStatus.textContent     = msg;
+    if (settingsStatus) settingsStatus.textContent = msg;
+  };
+
+  // ── Sync both toggle surfaces to the current active state ──────────────
+  function syncUI(isOn) {
+    faceBtn.textContent = isOn ? '📷 Face Cam: On' : '📷 Face Cam: Off';
+    faceBtn.classList.toggle('active', isOn);
+    barPreview.classList.toggle('show', isOn);
+    barDirs.classList.toggle('show', isOn);
+    recalBar.classList.toggle('show', isOn);
+    if (settingsToggle) settingsToggle.checked = isOn;
+    if (settingsPanel)  settingsPanel.style.display = isOn ? '' : 'none';
+    if (!isOn && barCtx) barCtx.clearRect(0, 0, barPreview.width, barPreview.height);
+  }
+
+  // ── Draw the small camera preview + highlight active directions ─────────
+  function drawPreview() {
+    if (!window.FaceTracker.active) return;
+
+    if (barCtx && video.readyState >= 2) {
+      barCtx.drawImage(video, 0, 0, barPreview.width, barPreview.height);
+      // Arrow overlays on the thumbnail
+      const c = window.FaceTracker.controls;
+      barCtx.font = 'bold 12px sans-serif';
+      barCtx.textAlign = 'center';
+      barCtx.fillStyle = c.up    ? '#FFD700' : 'rgba(255,255,255,0.2)'; barCtx.fillText('↑', 40, 10);
+      barCtx.fillStyle = c.down  ? '#FFD700' : 'rgba(255,255,255,0.2)'; barCtx.fillText('↓', 40, 56);
+      barCtx.fillStyle = c.left  ? '#FFD700' : 'rgba(255,255,255,0.2)'; barCtx.fillText('←',  8, 33);
+      barCtx.fillStyle = c.right ? '#FFD700' : 'rgba(255,255,255,0.2)'; barCtx.fillText('→', 72, 33);
+    }
+
+    // Highlight the standalone arrow indicators in the bar
+    const c = window.FaceTracker.controls;
+    document.getElementById('fbd-up')   ?.classList.toggle('lit', !!c.up);
+    document.getElementById('fbd-down') ?.classList.toggle('lit', !!c.down);
+    document.getElementById('fbd-left') ?.classList.toggle('lit', !!c.left);
+    document.getElementById('fbd-right')?.classList.toggle('lit', !!c.right);
+
+    requestAnimationFrame(drawPreview);
+  }
+
+  // ── Shared start/stop logic ────────────────────────────────────────────
+  async function turnOn() {
+    if (window.FaceTracker.active) return;
+    barStatus.textContent = 'Starting camera...';
+    try {
+      await window.FaceTracker.start(video);
+      syncUI(true);
+      drawPreview();
+    } catch (err) {
+      barStatus.textContent = 'Camera blocked — check browser permissions';
+      syncUI(false);
+    }
+  }
+
+  function turnOff() {
+    window.FaceTracker.stop();
+    syncUI(false);
+  }
+
+  // ── Play-area button ───────────────────────────────────────────────────
+  faceBtn.addEventListener('click', () => {
+    window.FaceTracker.active ? turnOff() : turnOn();
+  });
+
+  // ── Settings panel checkbox (also works as a toggle) ───────────────────
+  if (settingsToggle) {
+    settingsToggle.addEventListener('change', () => {
+      settingsToggle.checked ? turnOn() : turnOff();
+    });
+  }
+
+  // ── Recalibrate buttons (bar + settings panel) ─────────────────────────
+  [recalBar, recalSettings].forEach(btn => {
+    if (btn) btn.addEventListener('click', () => {
+      if (window.FaceTracker.active) {
+        window.FaceTracker.recalibrate();
+        barStatus.textContent = 'Center reset — keep looking straight ahead';
+      }
+    });
+  });
+
+  // ── Sensitivity slider (settings panel) ───────────────────────────────
+  if (sensSlider) {
+    sensSlider.addEventListener('input', () => {
+      const v = parseInt(sensSlider.value, 10);
+      window.FaceTracker.sensitivity = v / 100;
+      if (sensVal) sensVal.textContent = v;
+    });
+  }
+})();
 
 })();
 </script>
